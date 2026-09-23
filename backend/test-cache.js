@@ -1,3 +1,4 @@
+process.env.NODE_ENV = 'test';
 const app = require('./server');
 const jwt = require('jsonwebtoken');
 
@@ -6,7 +7,8 @@ const token = jwt.sign(
   process.env.JWT_SECRET || 'awf_super_secret_jwt_key_2026_charusat'
 );
 
-const server = app.listen(5097, async () => {
+const testPort = 5096;
+const server = app.listen(testPort, async () => {
   try {
     const headers = {
       Authorization: 'Bearer ' + token,
@@ -14,14 +16,14 @@ const server = app.listen(5097, async () => {
     };
 
     // Clear cache first
-    await fetch('http://localhost:5097/cache-clear', { method: 'POST' });
+    await fetch(`http://localhost:${testPort}/cache-clear`, { method: 'POST' });
 
     console.log('--- MEASURING UNCACHED (DATABASE / COLD CACHE) READINGS ---');
     const uncachedTimes = [];
     for (let i = 1; i <= 3; i++) {
-      await fetch('http://localhost:5097/cache-clear', { method: 'POST' }); // ensure cold cache
+      await fetch(`http://localhost:${testPort}/cache-clear`, { method: 'POST' }); // ensure cold cache
       const start = performance.now();
-      const res = await fetch('http://localhost:5097/tasks', { headers });
+      const res = await fetch(`http://localhost:${testPort}/tasks`, { headers });
       const duration = (performance.now() - start).toFixed(2);
       const data = await res.json();
       uncachedTimes.push(parseFloat(duration));
@@ -30,12 +32,12 @@ const server = app.listen(5097, async () => {
 
     console.log('\n--- MEASURING CACHED (NODE-CACHE HIT) READINGS ---');
     // Pre-populate cache with one request
-    await fetch('http://localhost:5097/tasks', { headers });
+    await fetch(`http://localhost:${testPort}/tasks`, { headers });
 
     const cachedTimes = [];
     for (let i = 1; i <= 3; i++) {
       const start = performance.now();
-      const res = await fetch('http://localhost:5097/tasks', { headers });
+      const res = await fetch(`http://localhost:${testPort}/tasks`, { headers });
       const duration = (performance.now() - start).toFixed(2);
       const data = await res.json();
       cachedTimes.push(parseFloat(duration));
@@ -53,17 +55,17 @@ const server = app.listen(5097, async () => {
 
     // Verify cache invalidation
     console.log('\n--- VERIFYING CACHE INVALIDATION ON WRITE ---');
-    const postRes = await fetch('http://localhost:5097/tasks', {
+    const postRes = await fetch(`http://localhost:${testPort}/tasks`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ title: 'Task to Invalidate Cache', priority: 'high' })
     });
     console.log('POST /tasks status:', postRes.status);
 
-    const checkRes = await fetch('http://localhost:5097/tasks', { headers });
+    const checkRes = await fetch(`http://localhost:${testPort}/tasks`, { headers });
     console.log('GET after POST X-Cache:', checkRes.headers.get('x-cache'), '(Expected: MISS due to invalidation)');
 
-    const statsRes = await fetch('http://localhost:5097/cache-stats');
+    const statsRes = await fetch(`http://localhost:${testPort}/cache-stats`);
     const statsData = await statsRes.json();
     console.log('\n--- CACHE TELEMETRY STATS (/cache-stats) ---');
     console.log(JSON.stringify(statsData.cache, null, 2));
