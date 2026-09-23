@@ -16,7 +16,7 @@
 | **02** | State Management & Routing in React | React Router v6, useState, Controlled Forms, 404 | ✅ Completed |
 | **03** | API Integration & Data Rendering in React | Fetch API, useEffect, GitHub REST API, Spinner, Error Handling | ✅ Completed |
 | **04** | Building a RESTful API with Node.js & Express | Express.js, Custom Middleware, In-Memory CRUD, Error Pipeline | ✅ Completed |
-| **05** | MongoDB Integration & Schema Design with Mongoose | MongoDB, Mongoose ODM, Schema Validation | ⏳ Pending |
+| **05** | MongoDB Integration & Schema Design with Mongoose | MongoDB, Mongoose ODM, Schema Validation, Pre-Save Hooks | ✅ Completed |
 | **06** | Full Stack Integration (React + Node + MongoDB) | Full-Stack MERN, CORS, API Synchronization | ⏳ Pending |
 | **07** | Authentication & Middleware Pipeline | JWT (JSON Web Tokens), bcryptjs, Auth Middleware | ⏳ Pending |
 | **08** | Performance Optimization & Lazy Loading in React | React.lazy(), Suspense, Code Splitting, DevTools | ⏳ Pending |

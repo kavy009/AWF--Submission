@@ -1,74 +1,95 @@
-# Practical 4: Building a RESTful API with Node.js and Express
+# Practicals 4 & 5: Express RESTful API & MongoDB Integration with Mongoose
 
 ## Subject: Advanced Web Development Frameworks (ITUE301)
 **Semester:** 5th  
 **Student:** Kavya Chauhan (24CE017)  
-**Course Outcomes / Program Outcomes:** CO2 / PO3, PO5  
+**Course Outcomes / Program Outcomes:** CO2, CO3 / PO3, PO5  
 
 ---
 
-## 🎯 Objective
-To design and implement a RESTful backend server with complete CRUD endpoints using an Express middleware pipeline.
+## 🎯 Practical 4: RESTful API with Node.js and Express
+- **Objective:** To design and implement a RESTful backend server with complete CRUD endpoints using an Express middleware pipeline.
+- **Features:** Global logging middleware, Content-Type verification, 404 handler, in-memory CRUD operations, centralized error handling.
 
 ---
 
-## 🏗️ Architecture & Middleware Pipeline
+## 🎯 Practical 5: MongoDB Integration and Schema Design with Mongoose
+- **Objective:** To connect a MongoDB database to an Express server and enforce strict data validation through a Mongoose schema.
+
+### 🗄️ Task Schema Design (`models/Task.js`)
+```javascript
+const taskSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: [true, 'Task title is required'],
+    trim: true,
+    minlength: [3, 'Task title must be at least 3 characters long']
+  },
+  description: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  completed: {
+    type: Boolean,
+    default: false
+  },
+  priority: {
+    type: String,
+    enum: {
+      values: ['low', 'medium', 'high'],
+      message: 'Priority must be either low, medium, or high'
+    },
+    default: 'medium'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+}, { timestamps: true });
 ```
-Client (Postman / Browser / Thunder Client)
- │
- ▼
-[JSON Parser Middleware] (express.json())
- │
- ▼
-[Global Request Logger] (Logs Method, URL, and Timestamp)
- │
- ▼
-[Content-Type Validator] (Rejects non-application/json on POST/PUT with 400)
- │
- ▼
-Express Router & Route-Specific Middlewares
- ├── GET    /tasks      ──► Retrieve all tasks (200 OK)
- ├── GET    /tasks/:id  ──► Validate Task ID ──► Retrieve task (200 OK / 404)
- ├── POST   /tasks      ──► Validate Title   ──► Create task (201 Created)
- ├── PUT    /tasks/:id  ──► Validate Task ID ──► Update task (200 OK / 404)
- └── DELETE /tasks/:id  ──► Validate Task ID ──► Delete task (200 OK / 404)
- │
- ▼
-[404 Route Not Found Handler] (Returns structured JSON for undefined paths)
- │
- ▼
-[Centralized Global Error Handler] (Catches unhandled errors, returns structured 500 JSON)
-```
+
+### ⚡ Supplementary Solutions:
+1. **Priority Enum Field:** Restricted to `low`, `medium`, `high` with a default of `medium`.
+2. **Pre-Save Hook:** Automatically cleans and trims leading/trailing whitespace from the task title before persisting to MongoDB.
+3. **Structured Validation Error Handling:** Intercepts Mongoose `ValidationError` and `CastError` to return user-friendly, structured JSON responses (`400 Bad Request`) instead of raw stack traces.
+4. **GET `/tasks/:id` Endpoint:** Validates MongoDB `ObjectId` format and returns `404 Not Found` if the document does not exist.
 
 ---
 
-## 📋 REST Endpoints Summary
+## 🔐 Environment Configuration
+Create a `.env` file in the `backend/` directory (see `.env.example`):
+```env
+PORT=5000
+MONGO_URI=mongodb://127.0.0.1:27017/taskdb
+```
 
-| Method | Endpoint | Description | Expected Status |
+> **Security Note:** The `.env` file is excluded from Git tracking via `.gitignore`. `.env.example` is committed for reference.
+
+---
+
+## 📋 API Endpoints
+
+| Method | Endpoint | Description | Status Codes |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/tasks` | Get all tasks | `200 OK` |
-| `GET` | `/tasks/:id` | Get specific task by numeric ID | `200 OK` / `404 Not Found` |
-| `POST` | `/tasks` | Create a new task (body requires `title`) | `201 Created` / `400 Bad Request` |
-| `PUT` | `/tasks/:id` | Update task fields (`title`, `description`, `completed`) | `200 OK` / `404 Not Found` |
-| `DELETE` | `/tasks/:id` | Remove a task by ID | `200 OK` / `404 Not Found` |
-| `GET` | `/trigger-error` | Deliberate exception to demonstrate error handler | `500 Internal Server Error` |
+| `GET` | `/tasks` | Fetch all tasks sorted by creation date | `200`, `500` |
+| `GET` | `/tasks/:id` | Fetch single task by MongoDB ObjectId | `200`, `400`, `404` |
+| `POST` | `/tasks` | Create new task with schema validation | `201`, `400`, `500` |
+| `PUT` | `/tasks/:id` | Update task with validator checks | `200`, `400`, `404` |
+| `DELETE` | `/tasks/:id` | Remove task from database | `200`, `400`, `404` |
+| `GET` | `/health` | Server & Database connectivity check | `200` |
 
 ---
 
 ## 💻 How to Run Locally
 
 ```bash
-# Navigate to the backend directory
+# Navigate to backend directory
 cd backend
 
 # Install dependencies
 npm install
 
-# Start Express server (default port: 5000)
+# Start Express server connected to MongoDB
 npm start
-
-# Or run with auto-reload (development mode)
-npm run dev
 ```
-
-Server will run at `http://localhost:5000`. You can test endpoints via Postman or Thunder Client.
