@@ -3,7 +3,7 @@
 
 **Student Name**: Kavya Chauhan  
 **Roll Number**: 24CE017  
-**Batch**: B1  
+**Batch**: A1  
 **Department**: Computer Engineering  
 **Institute**: Faculty of Technology and Engineering (FTE)  
 **University**: Charotar University of Science and Technology (CHARUSAT)  
