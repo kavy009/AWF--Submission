@@ -18,14 +18,14 @@ All practical assignments for ITUE301 have been implemented, tested, and organiz
 
 | Practical # | Title / Objective | Tech Stack | Source Directory | Key Implementation Details |
 | :---: | :--- | :--- | :--- | :--- |
-| **Practical 1** | **React & Component Architecture** | React 18, Vite, CSS3 | [`Practical-01/src/components`](Practical-01/src/components) | Modular, reusable UI components (`Header`, `About`, `Skills`, `Projects`, `Footer`) with props passing and inline themeColor styling. |
-| **Practical 2** | **State Management & Routing in React** | React Router v6, `useState` | [`Practical-01/src/App.jsx`](Practical-01/src/App.jsx) | Client-side routing with `react-router-dom` across multiple routes (`/`, `/projects`, `/tasks`, `/contact`, `/auth`), controlled forms, and dark/light mode toggle. |
-| **Practical 3** | **API Integration & Data Rendering** | Fetch API, `useEffect`, Async/Await | [`Practical-01/src/components/Projects.jsx`](Practical-01/src/components/Projects.jsx) | Asynchronous REST integration fetching live public repositories from the GitHub API with loading spinner, error fallback, retry mechanism & search filter. |
+| **Practical 1** | **React & Component Architecture** | React 18, Vite, CSS3 | [`Portfolio/src/components`](Portfolio/src/components) | Modular, reusable UI components (`Header`, `About`, `Skills`, `Projects`, `Footer`) with props passing and inline themeColor styling. |
+| **Practical 2** | **State Management & Routing in React** | React Router v6, `useState` | [`Portfolio/src/App.jsx`](Portfolio/src/App.jsx) | Client-side routing with `react-router-dom` across multiple routes (`/`, `/projects`, `/tasks`, `/contact`, `/auth`), controlled forms, and dark/light mode toggle. |
+| **Practical 3** | **API Integration & Data Rendering** | Fetch API, `useEffect`, Async/Await | [`Portfolio/src/components/Projects.jsx`](Portfolio/src/components/Projects.jsx) | Asynchronous REST integration fetching live public repositories from the GitHub API with loading spinner, error fallback, retry mechanism & search filter. |
 | **Practical 4** | **RESTful API with Node.js & Express** | Express.js, Node.js | [`backend/server.js`](backend/server.js) | Modular Express REST API featuring in-memory Task CRUD endpoints, global request logging, Content-Type enforcement, and centralized error pipeline. |
 | **Practical 5** | **MongoDB & Mongoose Schema Design** | Mongoose ODM, MongoDB | [`backend/models/Task.js`](backend/models/Task.js) | Schema definition with priority enum (`low`, `medium`, `high`), pre-save title trimming hook, persistent database CRUD operations, and structured JSON validation error handling. |
-| **Practical 6** | **Full Stack Integration (React + Express + Mongo)** | Full MERN Stack, CORS | [`Practical-01/src/services/api.js`](Practical-01/src/services/api.js) | Centralized `api.js` client, real-time database persistence, optimistic UI updates, delete confirmation modal, and dynamic Toast notifications. |
+| **Practical 6** | **Full Stack Integration (React + Express + Mongo)** | Full MERN Stack, CORS | [`Portfolio/src/services/api.js`](Portfolio/src/services/api.js) | Centralized `api.js` client, real-time database persistence, optimistic UI updates, delete confirmation modal, and dynamic Toast notifications. |
 | **Practical 7** | **Authentication & Middleware Pipeline** | JWT, bcryptjs, Express | [`backend/routes/auth.js`](backend/routes/auth.js) | Secure JWT authentication, password hashing with bcryptjs (10 rounds), server-side input validation middleware, route-level JWT protection, and `/auth/me` endpoint. |
-| **Practical 8** | **Performance Optimization & Lazy Loading** | `React.lazy()`, `<Suspense>` | [`Practical-01/src/App.jsx`](Practical-01/src/App.jsx) | Route-based code splitting, dynamic chunk loading, animated `<PageFallback />`, on-demand Runtime Profiler, and ~25 kB initial bundle reduction. |
+| **Practical 8** | **Performance Optimization & Lazy Loading** | `React.lazy()`, `<Suspense>` | [`Portfolio/src/App.jsx`](Portfolio/src/App.jsx) | Route-based code splitting, dynamic chunk loading, animated `<PageFallback />`, on-demand Runtime Profiler, and ~25 kB initial bundle reduction. |
 | **Practical 9** | **In-Memory Caching & Query Optimization** | `node-cache`, Express | [`backend/utils/cache.js`](backend/utils/cache.js) | Server-side in-memory caching with automatic write-invalidation (`POST`, `PUT`, `DELETE`), `/cache-stats` telemetry, and 26.8% latency reduction. |
 
 ---
@@ -34,7 +34,7 @@ All practical assignments for ITUE301 have been implemented, tested, and organiz
 
 ```
 AWF--Submission/
-├── Practical-01/                          # Frontend React 18 Application (Practicals 1, 2, 3, 6, 8)
+├── Portfolio/                             # Frontend React 18 Application (Practicals 1, 2, 3, 6, 8)
 │   ├── src/
 │   │   ├── components/                    # Header, Footer, NavBar, Projects, Spinner, ErrorMessage, Toast, PageFallback, PerformanceProfiler
 │   │   ├── pages/                         # Home, Contact, TaskManager, AuthPage, NotFound
@@ -93,7 +93,7 @@ The server will run on `http://localhost:5000` with MongoDB connected and in-mem
 In a **separate terminal**:
 ```bash
 # Navigate to frontend directory
-cd Practical-01
+cd Portfolio
 
 # Install dependencies
 npm install
@@ -116,7 +116,7 @@ node test-cache.js
 ## ⚡ Performance Optimization & Caching Benchmarks
 
 ### Practical 8: React Code Splitting & Bundle Reduction
-Running `npm run build` inside `Practical-01/` verifies route-level code splitting via `React.lazy()` and `Suspense`:
+Running `npm run build` inside `Portfolio/` verifies route-level code splitting via `React.lazy()` and `Suspense`:
 
 | File / Asset | Baseline (Monolithic) | After Practical 8 (Lazy Loaded) | Impact / Purpose |
 | :--- | :---: | :---: | :--- |
@@ -173,5 +173,5 @@ Running `node test-cache.js` measures real API response times between uncached M
 
 ## 📜 Course Syllabus & Resources
 - [ITUE301 Practical List Manual](2026-27-ODD-ITUE301-AWF-PracticalList%20(1).pdf)
-- [Frontend Documentation](Practical-01/README.md)
+- [Frontend Documentation](Portfolio/README.md)
 - [Backend Documentation](backend/README.md)

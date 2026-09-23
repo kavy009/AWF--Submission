@@ -67,7 +67,7 @@ Client First Visit ──► index.js (265.16 kB core vendor runtime)
 
 ## 🚀 How to Verify Locally
 ```bash
-cd Practical-01
+cd Portfolio
 npm run build
 ```
 Notice the individual `.js` chunk files created in `dist/assets/` corresponding to each lazy-loaded page route.
