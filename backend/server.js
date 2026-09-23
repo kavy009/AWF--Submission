@@ -7,6 +7,7 @@ const Task = require('./models/Task');
 const auth = require('./middleware/auth');
 const { validateTaskInput } = require('./middleware/validation');
 const authRoutes = require('./routes/auth');
+const cache = require('./utils/cache');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -87,7 +88,7 @@ const requireJsonContent = (req, res, next) => {
 
 app.use(requireJsonContent);
 
-// Middleware to validate MongoDB ObjectId (allows fallback string IDs)
+// Middleware to validate MongoDB ObjectId or alphanumeric ID
 const validateObjectId = (req, res, next) => {
   const id = req.params.id;
   if (!id || id.trim() === '') {
@@ -106,12 +107,46 @@ const validateObjectId = (req, res, next) => {
 app.use('/auth', authRoutes);
 
 // ==========================================
-// RESTful Task Routes (Protected with JWT Auth)
+// Cache Debug & Statistics (Practical 9 Supplementary)
+// ==========================================
+app.get('/cache-stats', (req, res) => {
+  res.status(200).json({
+    success: true,
+    cache: cache.getStats()
+  });
+});
+
+app.post('/cache-clear', (req, res) => {
+  cache.flush();
+  res.status(200).json({
+    success: true,
+    message: 'In-memory cache successfully invalidated and cleared'
+  });
+});
+
+// ==========================================
+// RESTful Task Routes with In-Memory Caching (Practical 9)
 // ==========================================
 
-// GET /tasks - Retrieve all tasks (Protected)
+// GET /tasks - Retrieve all tasks (Checks node-cache first)
 app.get('/tasks', auth, async (req, res, next) => {
   try {
+    const cacheKey = 'all_tasks';
+    const { data: cachedData, hit } = cache.get(cacheKey);
+
+    if (hit && cachedData) {
+      res.setHeader('X-Cache', 'HIT');
+      return res.status(200).json({
+        success: true,
+        cached: true,
+        source: 'in-memory-cache',
+        count: cachedData.length,
+        user: req.user,
+        data: cachedData
+      });
+    }
+
+    // Cache MISS: Retrieve from MongoDB database
     let tasksList = [];
     try {
       tasksList = await Task.find().sort({ createdAt: -1 });
@@ -119,8 +154,14 @@ app.get('/tasks', auth, async (req, res, next) => {
       tasksList = memoryTasks;
     }
 
+    // Store in node-cache with 60-second TTL
+    cache.set(cacheKey, tasksList, 60);
+
+    res.setHeader('X-Cache', 'MISS');
     res.status(200).json({
       success: true,
+      cached: false,
+      source: 'database-query',
       count: tasksList.length,
       user: req.user,
       data: tasksList
@@ -130,9 +171,22 @@ app.get('/tasks', auth, async (req, res, next) => {
   }
 });
 
-// GET /tasks/:id - Retrieve single task by ID (Protected)
+// GET /tasks/:id - Retrieve single task by ID (Supplementary: caches individual task)
 app.get('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
   try {
+    const cacheKey = `task_${req.params.id}`;
+    const { data: cachedTask, hit } = cache.get(cacheKey);
+
+    if (hit && cachedTask) {
+      res.setHeader('X-Cache', 'HIT');
+      return res.status(200).json({
+        success: true,
+        cached: true,
+        source: 'in-memory-cache',
+        data: cachedTask
+      });
+    }
+
     let task = null;
     try {
       task = await Task.findById(req.params.id);
@@ -148,8 +202,14 @@ app.get('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
       });
     }
 
+    // Cache the individual task
+    cache.set(cacheKey, task, 60);
+
+    res.setHeader('X-Cache', 'MISS');
     res.status(200).json({
       success: true,
+      cached: false,
+      source: 'database-query',
       data: task
     });
   } catch (err) {
@@ -157,7 +217,7 @@ app.get('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
   }
 });
 
-// POST /tasks - Create a new task (Protected + Server-side input validation)
+// POST /tasks - Create a task & Invalidate Cache Key (Practical 9 Core Requirement)
 app.post('/tasks', auth, validateTaskInput, async (req, res, next) => {
   try {
     const { title, description, completed, priority } = req.body;
@@ -183,6 +243,10 @@ app.post('/tasks', auth, validateTaskInput, async (req, res, next) => {
       memoryTasks.unshift(savedTask);
     }
 
+    // Invalidate cache immediately after write operation
+    cache.del('all_tasks');
+    console.log('[Cache Invalidation] Cleared cache key: "all_tasks" after POST');
+
     res.status(201).json({
       success: true,
       message: 'Task created successfully',
@@ -193,7 +257,7 @@ app.post('/tasks', auth, validateTaskInput, async (req, res, next) => {
   }
 });
 
-// PUT /tasks/:id - Update an existing task (Protected)
+// PUT /tasks/:id - Update task & Invalidate Cache Keys
 app.put('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
   try {
     const { title, description, completed, priority } = req.body;
@@ -224,6 +288,11 @@ app.put('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
       });
     }
 
+    // Invalidate list cache and individual task cache
+    cache.del('all_tasks');
+    cache.del(`task_${req.params.id}`);
+    console.log(`[Cache Invalidation] Cleared cache keys after PUT for task ${req.params.id}`);
+
     res.status(200).json({
       success: true,
       message: 'Task updated successfully',
@@ -234,7 +303,7 @@ app.put('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
   }
 });
 
-// DELETE /tasks/:id - Delete a task (Protected)
+// DELETE /tasks/:id - Delete task & Invalidate Cache Keys
 app.delete('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
   try {
     let deletedTask = null;
@@ -255,6 +324,11 @@ app.delete('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
       });
     }
 
+    // Invalidate list cache and individual task cache
+    cache.del('all_tasks');
+    cache.del(`task_${req.params.id}`);
+    console.log(`[Cache Invalidation] Cleared cache keys after DELETE for task ${req.params.id}`);
+
     res.status(200).json({
       success: true,
       message: 'Task deleted successfully',
@@ -270,6 +344,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',
     databaseConnected: mongoose.connection.readyState === 1,
+    cacheStats: cache.getStats(),
     timestamp: new Date().toISOString()
   });
 });
@@ -283,11 +358,10 @@ app.use((req, res) => {
   });
 });
 
-// Centralized Global Error Handling Middleware (Handles Mongoose validation cleanly)
+// Centralized Global Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error('[Error Pipeline caught]:', err.message);
 
-  // Mongoose Schema Validation Error Handler
   if (err.name === 'ValidationError') {
     const errors = Object.values(err.errors).map((val) => val.message);
     return res.status(400).json({
@@ -297,7 +371,6 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Mongoose CastError (Invalid ID)
   if (err.name === 'CastError') {
     return res.status(400).json({
       success: false,
@@ -306,7 +379,6 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Default Internal Error
   const status = err.status || 500;
   res.status(status).json({
     success: false,
@@ -315,10 +387,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start Server if not testing
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    console.log(`Task Manager API running at http://localhost:${PORT}`);
+    console.log(`Task Manager API with In-Memory Caching running at http://localhost:${PORT}`);
   });
 }
 

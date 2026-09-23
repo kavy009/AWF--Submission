@@ -8,7 +8,7 @@
 
 ---
 
-## 📚 Practical Index
+## 📚 Practical Submission Index (Practicals 1 – 9)
 
 | Practical | Title | Core Technologies | Status |
 | :---: | :--- | :--- | :---: |
@@ -20,22 +20,28 @@
 | **06** | Full Stack Integration (React + Node + MongoDB) | Full-Stack MERN, CORS, API Synchronization, Optimistic UI | ✅ Completed |
 | **07** | Authentication & Middleware Pipeline | JWT (JSON Web Tokens), bcryptjs, Auth Middleware, Protected Routes | ✅ Completed |
 | **08** | Performance Optimization & Lazy Loading in React | React.lazy(), Suspense, Code Splitting, DevTools Profiler | ✅ Completed |
-| **09** | In-Memory Caching & Query Optimization | node-cache, Cache Invalidation, Response Profiling | ⏳ Pending |
+| **09** | In-Memory Caching & Query Optimization | node-cache, Cache Invalidation, Response Profiling, /cache-stats | ✅ Completed |
 
 ---
 
 ## 🚀 Running the Full Stack Application Locally
 
 The project is structured as a clean monorepo separating frontend and backend:
-- `Practical-01/`: Vite + React 18 frontend application (with Code-Splitting & Lazy Loading)
-- `backend/`: Node.js + Express + Mongoose + JWT REST API backend
+- `Practical-01/`: Vite + React 18 frontend application (with Code Splitting, Lazy Loading & JWT State)
+- `backend/`: Node.js + Express + Mongoose + JWT + node-cache REST API backend
 
 ### Terminal 1 - Backend Server:
 ```bash
 cd backend
 npm install
 npm start
-# Express runs on http://localhost:5000 with CORS and MongoDB connected
+# Express runs on http://localhost:5000 with MongoDB connected & in-memory caching active
+```
+
+To run the automated caching and latency profiling suite:
+```bash
+cd backend
+node test-cache.js
 ```
 
 ### Terminal 2 - Frontend Development Server:
