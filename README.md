@@ -18,7 +18,7 @@
 | **04** | Building a RESTful API with Node.js & Express | Express.js, Custom Middleware, In-Memory CRUD, Error Pipeline | ✅ Completed |
 | **05** | MongoDB Integration & Schema Design with Mongoose | MongoDB, Mongoose ODM, Schema Validation, Pre-Save Hooks | ✅ Completed |
 | **06** | Full Stack Integration (React + Node + MongoDB) | Full-Stack MERN, CORS, API Synchronization, Optimistic UI | ✅ Completed |
-| **07** | Authentication & Middleware Pipeline | JWT (JSON Web Tokens), bcryptjs, Auth Middleware | ⏳ Pending |
+| **07** | Authentication & Middleware Pipeline | JWT (JSON Web Tokens), bcryptjs, Auth Middleware, Protected Routes | ✅ Completed |
 | **08** | Performance Optimization & Lazy Loading in React | React.lazy(), Suspense, Code Splitting, DevTools | ⏳ Pending |
 | **09** | In-Memory Caching & Query Optimization | node-cache, Cache Invalidation, Response Profiling | ⏳ Pending |
 
@@ -28,14 +28,14 @@
 
 The project is structured as a clean monorepo separating frontend and backend:
 - `Practical-01/`: Vite + React 18 frontend application
-- `backend/`: Node.js + Express + Mongoose REST API backend
+- `backend/`: Node.js + Express + Mongoose + JWT REST API backend
 
 ### Terminal 1 - Backend Server:
 ```bash
 cd backend
 npm install
 npm start
-# Express runs on http://localhost:5000 with CORS enabled
+# Express runs on http://localhost:5000 with CORS and MongoDB connected
 ```
 
 ### Terminal 2 - Frontend Development Server:

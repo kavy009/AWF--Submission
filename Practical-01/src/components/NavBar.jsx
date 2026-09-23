@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 
-function NavBar({ darkMode, onToggleTheme }) {
+function NavBar({ darkMode, onToggleTheme, authUser }) {
   return (
     <nav className="navbar">
       <div className="nav-container">
@@ -47,6 +47,16 @@ function NavBar({ darkMode, onToggleTheme }) {
               }
             >
               Contact
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/auth"
+              className={({ isActive }) =>
+                isActive ? 'nav-link-btn active auth-nav-btn' : 'nav-link-btn auth-nav-btn'
+              }
+            >
+              {authUser ? `👤 ${authUser.name || 'Account'}` : '🔐 Login / Register'}
             </NavLink>
           </li>
         </ul>

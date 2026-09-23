@@ -7,10 +7,27 @@ import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 import Projects from './components/Projects';
 import TaskManager from './pages/TaskManager';
+import AuthPage from './pages/AuthPage';
 
 function App() {
   // useState variable for theme mode toggle (Supplementary requirement)
   const [darkMode, setDarkMode] = useState(true);
+
+  // Practical 7: Authentication state management
+  const [authUser, setAuthUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('awf_auth_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('awf_auth_token');
+    localStorage.removeItem('awf_auth_user');
+    setAuthUser(null);
+  };
 
   const studentData = {
     name: 'Kavya Chauhan',
@@ -56,13 +73,27 @@ function App() {
 
   return (
     <div className={`portfolio-app ${darkMode ? 'theme-dark' : 'theme-light'}`}>
-      <NavBar darkMode={darkMode} onToggleTheme={handleToggleTheme} />
+      <NavBar
+        darkMode={darkMode}
+        onToggleTheme={handleToggleTheme}
+        authUser={authUser}
+      />
       
       <main className="main-content">
         <Routes>
           <Route path="/" element={<Home studentData={studentData} />} />
           <Route path="/projects" element={<Projects />} />
-          <Route path="/tasks" element={<TaskManager />} />
+          <Route path="/tasks" element={<TaskManager authUser={authUser} />} />
+          <Route
+            path="/auth"
+            element={
+              <AuthPage
+                user={authUser}
+                onAuthSuccess={setAuthUser}
+                onLogout={handleLogout}
+              />
+            }
+          />
           <Route path="/contact" element={<Contact studentEmail={studentData.email} />} />
           {/* Supplementary 404 Route */}
           <Route path="*" element={<NotFound />} />

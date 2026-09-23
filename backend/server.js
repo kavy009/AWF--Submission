@@ -4,6 +4,9 @@ const cors = require('cors');
 require('dotenv').config();
 
 const Task = require('./models/Task');
+const auth = require('./middleware/auth');
+const { validateTaskInput } = require('./middleware/validation');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,14 +18,14 @@ app.use(cors());
 // 2. Built-in JSON body parser
 app.use(express.json());
 
-// 2. Global Request Logging Middleware
+// 3. Global Request Logging Middleware
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
   console.log(`[${req.method}] ${req.url} - ${timestamp}`);
   next();
 });
 
-// 3. Connect to MongoDB via Mongoose
+// 4. Connect to MongoDB via Mongoose
 let isDbConnected = false;
 
 mongoose
@@ -36,7 +39,38 @@ mongoose
     console.log('[Database Info] Ensure MongoDB is running locally or provide a valid MONGO_URI in .env');
   });
 
-// 4. Content-Type Enforcer Middleware for write operations
+// In-memory fallback tasks in case MongoDB is offline during testing
+let memoryTasks = [
+  {
+    _id: 'task-1',
+    id: 'task-1',
+    title: 'Setup React Portfolio UI',
+    description: 'Build Vite + React component architecture with props',
+    completed: true,
+    priority: 'high',
+    createdAt: new Date().toISOString()
+  },
+  {
+    _id: 'task-2',
+    id: 'task-2',
+    title: 'Configure React Router & useState',
+    description: 'Implement multi-route navigation and controlled form',
+    completed: true,
+    priority: 'medium',
+    createdAt: new Date().toISOString()
+  },
+  {
+    _id: 'task-3',
+    id: 'task-3',
+    title: 'Integrate GitHub REST API',
+    description: 'Fetch repositories asynchronously with loading spinner',
+    completed: true,
+    priority: 'low',
+    createdAt: new Date().toISOString()
+  }
+];
+
+// 5. Content-Type Enforcer Middleware for write operations
 const requireJsonContent = (req, res, next) => {
   if (['POST', 'PUT'].includes(req.method)) {
     const contentType = req.headers['content-type'];
@@ -53,40 +87,59 @@ const requireJsonContent = (req, res, next) => {
 
 app.use(requireJsonContent);
 
-// Middleware to validate MongoDB ObjectId
+// Middleware to validate MongoDB ObjectId (allows fallback string IDs)
 const validateObjectId = (req, res, next) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+  const id = req.params.id;
+  if (!id || id.trim() === '') {
     return res.status(400).json({
       success: false,
       error: 'Invalid ID Format',
-      message: `"${req.params.id}" is not a valid MongoDB ObjectId`
+      message: 'ID parameter cannot be empty'
     });
   }
   next();
 };
 
 // ==========================================
-// RESTful CRUD Endpoints with Mongoose Model
+// Authentication Routes (Practical 7)
+// ==========================================
+app.use('/auth', authRoutes);
+
+// ==========================================
+// RESTful Task Routes (Protected with JWT Auth)
 // ==========================================
 
-// GET /tasks - Retrieve all tasks
-app.get('/tasks', async (req, res, next) => {
+// GET /tasks - Retrieve all tasks (Protected)
+app.get('/tasks', auth, async (req, res, next) => {
   try {
-    const tasks = await Task.find().sort({ createdAt: -1 });
+    let tasksList = [];
+    try {
+      tasksList = await Task.find().sort({ createdAt: -1 });
+    } catch {
+      tasksList = memoryTasks;
+    }
+
     res.status(200).json({
       success: true,
-      count: tasks.length,
-      data: tasks
+      count: tasksList.length,
+      user: req.user,
+      data: tasksList
     });
   } catch (err) {
     next(err);
   }
 });
 
-// GET /tasks/:id - Retrieve single task by ID (Supplementary requirement)
-app.get('/tasks/:id', validateObjectId, async (req, res, next) => {
+// GET /tasks/:id - Retrieve single task by ID (Protected)
+app.get('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
   try {
-    const task = await Task.findById(req.params.id);
+    let task = null;
+    try {
+      task = await Task.findById(req.params.id);
+    } catch {
+      task = memoryTasks.find((t) => t._id === req.params.id || t.id === req.params.id);
+    }
+
     if (!task) {
       return res.status(404).json({
         success: false,
@@ -94,6 +147,7 @@ app.get('/tasks/:id', validateObjectId, async (req, res, next) => {
         message: `Task with ID ${req.params.id} not found`
       });
     }
+
     res.status(200).json({
       success: true,
       data: task
@@ -103,40 +157,66 @@ app.get('/tasks/:id', validateObjectId, async (req, res, next) => {
   }
 });
 
-// POST /tasks - Create a new task with Mongoose validation
-app.post('/tasks', async (req, res, next) => {
+// POST /tasks - Create a new task (Protected + Server-side input validation)
+app.post('/tasks', auth, validateTaskInput, async (req, res, next) => {
   try {
     const { title, description, completed, priority } = req.body;
 
-    const task = await Task.create({
-      title,
-      description,
-      completed,
-      priority
-    });
+    let savedTask = null;
+    try {
+      savedTask = await Task.create({
+        title,
+        description,
+        completed,
+        priority
+      });
+    } catch {
+      savedTask = {
+        _id: 'task-' + Date.now(),
+        id: 'task-' + Date.now(),
+        title: title.trim(),
+        description: description ? String(description).trim() : '',
+        completed: Boolean(completed),
+        priority: priority || 'medium',
+        createdAt: new Date().toISOString()
+      };
+      memoryTasks.unshift(savedTask);
+    }
 
     res.status(201).json({
       success: true,
       message: 'Task created successfully',
-      data: task
+      data: savedTask
     });
   } catch (err) {
     next(err);
   }
 });
 
-// PUT /tasks/:id - Update an existing task
-app.put('/tasks/:id', validateObjectId, async (req, res, next) => {
+// PUT /tasks/:id - Update an existing task (Protected)
+app.put('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
   try {
     const { title, description, completed, priority } = req.body;
+    let updatedTask = null;
 
-    const task = await Task.findByIdAndUpdate(
-      req.params.id,
-      { title, description, completed, priority },
-      { new: true, runValidators: true }
-    );
+    try {
+      updatedTask = await Task.findByIdAndUpdate(
+        req.params.id,
+        { title, description, completed, priority },
+        { new: true, runValidators: true }
+      );
+    } catch {
+      const idx = memoryTasks.findIndex((t) => t._id === req.params.id || t.id === req.params.id);
+      if (idx !== -1) {
+        if (title !== undefined) memoryTasks[idx].title = title;
+        if (description !== undefined) memoryTasks[idx].description = description;
+        if (completed !== undefined) memoryTasks[idx].completed = completed;
+        if (priority !== undefined) memoryTasks[idx].priority = priority;
+        updatedTask = memoryTasks[idx];
+      }
+    }
 
-    if (!task) {
+    if (!updatedTask) {
       return res.status(404).json({
         success: false,
         error: 'Not Found',
@@ -147,19 +227,27 @@ app.put('/tasks/:id', validateObjectId, async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Task updated successfully',
-      data: task
+      data: updatedTask
     });
   } catch (err) {
     next(err);
   }
 });
 
-// DELETE /tasks/:id - Delete a task
-app.delete('/tasks/:id', validateObjectId, async (req, res, next) => {
+// DELETE /tasks/:id - Delete a task (Protected)
+app.delete('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
   try {
-    const task = await Task.findByIdAndDelete(req.params.id);
+    let deletedTask = null;
+    try {
+      deletedTask = await Task.findByIdAndDelete(req.params.id);
+    } catch {
+      const idx = memoryTasks.findIndex((t) => t._id === req.params.id || t.id === req.params.id);
+      if (idx !== -1) {
+        deletedTask = memoryTasks.splice(idx, 1)[0];
+      }
+    }
 
-    if (!task) {
+    if (!deletedTask) {
       return res.status(404).json({
         success: false,
         error: 'Not Found',
@@ -170,7 +258,7 @@ app.delete('/tasks/:id', validateObjectId, async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Task deleted successfully',
-      data: task
+      data: deletedTask
     });
   } catch (err) {
     next(err);
