@@ -13,7 +13,7 @@
 | Practical | Title | Core Technologies | Status |
 | :---: | :--- | :--- | :---: |
 | **01** | Introduction to React & Component Architecture | React 18, Vite, Reusable Components, Props | ✅ Completed |
-| **02** | State Management & Routing in React | React Router v6, useState, Controlled Forms | ⏳ Pending |
+| **02** | State Management & Routing in React | React Router v6, useState, Controlled Forms, 404 | ✅ Completed |
 | **03** | API Integration & Data Rendering in React | Fetch/Axios, useEffect, GitHub REST API | ⏳ Pending |
 | **04** | Building a RESTful API with Node.js & Express | Express.js, Custom Middleware, CRUD Operations | ⏳ Pending |
 | **05** | MongoDB Integration & Schema Design with Mongoose | MongoDB, Mongoose ODM, Schema Validation | ⏳ Pending |

@@ -1,33 +1,57 @@
 import React from 'react';
+import { NavLink, Link } from 'react-router-dom';
 
-function NavBar({ activeSection, onNavigate }) {
-  const navItems = [
-    { id: 'header', label: 'Home' },
-    { id: 'about', label: 'About' },
-    { id: 'skills', label: 'Skills' },
-    { id: 'projects', label: 'Projects' },
-    { id: 'contact', label: 'Contact' }
-  ];
-
+function NavBar({ darkMode, onToggleTheme }) {
   return (
     <nav className="navbar">
       <div className="nav-container">
-        <a href="#header" className="nav-logo">
+        <Link to="/" className="nav-logo">
           <span className="logo-accent">&lt;</span>DevPortfolio<span className="logo-accent">/&gt;</span>
-        </a>
+        </Link>
         <ul className="nav-links">
-          {navItems.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                className={`nav-link-btn ${activeSection === item.id ? 'active' : ''}`}
-                onClick={() => onNavigate(item.id)}
-              >
-                {item.label}
-              </button>
-            </li>
-          ))}
+          <li>
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                isActive ? 'nav-link-btn active' : 'nav-link-btn'
+              }
+            >
+              Home
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/projects"
+              className={({ isActive }) =>
+                isActive ? 'nav-link-btn active' : 'nav-link-btn'
+              }
+            >
+              Projects
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/contact"
+              className={({ isActive }) =>
+                isActive ? 'nav-link-btn active' : 'nav-link-btn'
+              }
+            >
+              Contact
+            </NavLink>
+          </li>
         </ul>
+
+        {/* Theme mode toggle button using useState in App */}
+        <div className="nav-actions">
+          <button
+            type="button"
+            className="theme-toggle-btn"
+            onClick={onToggleTheme}
+            aria-label="Toggle theme mode"
+          >
+            {darkMode ? '☀️ Light' : '🌙 Dark'}
+          </button>
+        </div>
       </div>
     </nav>
   );
