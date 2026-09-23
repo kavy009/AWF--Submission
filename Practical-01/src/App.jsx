@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 import Projects from './components/Projects';
+import TaskManager from './pages/TaskManager';
 
 function App() {
   // useState variable for theme mode toggle (Supplementary requirement)
@@ -61,6 +62,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home studentData={studentData} />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/tasks" element={<TaskManager />} />
           <Route path="/contact" element={<Contact studentEmail={studentData.email} />} />
           {/* Supplementary 404 Route */}
           <Route path="*" element={<NotFound />} />

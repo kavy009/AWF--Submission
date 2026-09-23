@@ -17,17 +17,31 @@
 | **03** | API Integration & Data Rendering in React | Fetch API, useEffect, GitHub REST API, Spinner, Error Handling | ✅ Completed |
 | **04** | Building a RESTful API with Node.js & Express | Express.js, Custom Middleware, In-Memory CRUD, Error Pipeline | ✅ Completed |
 | **05** | MongoDB Integration & Schema Design with Mongoose | MongoDB, Mongoose ODM, Schema Validation, Pre-Save Hooks | ✅ Completed |
-| **06** | Full Stack Integration (React + Node + MongoDB) | Full-Stack MERN, CORS, API Synchronization | ⏳ Pending |
+| **06** | Full Stack Integration (React + Node + MongoDB) | Full-Stack MERN, CORS, API Synchronization, Optimistic UI | ✅ Completed |
 | **07** | Authentication & Middleware Pipeline | JWT (JSON Web Tokens), bcryptjs, Auth Middleware | ⏳ Pending |
 | **08** | Performance Optimization & Lazy Loading in React | React.lazy(), Suspense, Code Splitting, DevTools | ⏳ Pending |
 | **09** | In-Memory Caching & Query Optimization | node-cache, Cache Invalidation, Response Profiling | ⏳ Pending |
 
 ---
 
-## 🛠️ Tech Stack Across Practicals
-- **Frontend (`Practical-01/`):** React 18, Vite, React Router v6, Vanilla CSS3 / Modern Styling
-- **Backend (`backend/`):** Node.js (v18+), Express.js, RESTful API, Custom Middlewares
-- **Database:** MongoDB, Mongoose ODM (Practicals 5–9)
-- **Authentication:** JWT (jsonwebtoken), bcryptjs (Practical 7)
-- **Optimization & Caching:** React.lazy, Suspense, node-cache (Practicals 8 & 9)
-- **Tools & Testing:** Git, DevTools, Postman / REST Client
+## 🚀 Running the Full Stack Application Locally
+
+The project is structured as a clean monorepo separating frontend and backend:
+- `Practical-01/`: Vite + React 18 frontend application
+- `backend/`: Node.js + Express + Mongoose REST API backend
+
+### Terminal 1 - Backend Server:
+```bash
+cd backend
+npm install
+npm start
+# Express runs on http://localhost:5000 with CORS enabled
+```
+
+### Terminal 2 - Frontend Development Server:
+```bash
+cd Practical-01
+npm install
+npm run dev
+# React app runs on http://localhost:5173
+```

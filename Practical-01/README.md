@@ -1,58 +1,53 @@
-# Practicals 1, 2 & 3: Component Architecture, Routing & REST API Integration
+# Practicals 1–3 & 6: React Frontend with Full-Stack Task Integration
 
 ## Subject: Advanced Web Development Frameworks (ITUE301)
 **Semester:** 5th  
-**Course Outcomes / Program Outcomes:** CO1 / PO3, PO5  
+**Student:** Kavya Chauhan (24CE017)  
+**Course Outcomes / Program Outcomes:** CO1, CO2 / PO3, PO5  
 
 ---
 
-## 🎯 Practical 1: Introduction to React and Component Architecture
-- **Objective:** To set up a React development environment using Vite and build a static UI using independently structured, reusable components.
-- **Components:** `Header`, `About`, `Skills`, `Projects`, `Footer`.
-- **Props Flow:** Passing data from parent `App.jsx` into child components.
+## 🎯 Practical 6: Full Stack Integration (React + Node + MongoDB)
+- **Objective:** To wire the React frontend to the Node/Express/MongoDB backend into a fully functional full-stack application with proper state synchronization.
 
----
-
-## 🎯 Practical 2: State Management and Routing in React
-- **Objective:** To implement reactive state management using `useState` and multi-page navigation using `React Router v6` without full page reload.
-- **Routes:** `/` (Home), `/projects` (Projects), `/contact` (Contact), `*` (404 NotFound).
-- **State Hooks:** Dark/Light mode theme switch, controlled inputs, live character counter, and UI help tooltips.
-
----
-
-## 🎯 Practical 3: API Integration and Data Rendering in React
-- **Objective:** To consume a public REST API in React and handle asynchronous data with loading, error, and success states.
-
-### 🌐 REST API Integrated
-- **Endpoint:** `https://api.github.com/users/kavy009/repos`
-- **Method:** `GET`
-- **Hook Used:** `useEffect` with dependency array `[]` (fires once on component mount to prevent infinite re-fetching).
-- **Asynchronous States Handled:**
-  1. **Loading State:** Displays `<Spinner />` with a spinner animation while data is being fetched.
-  2. **Error State:** Catches network/HTTP errors and displays `<ErrorMessage />` with an interactive **"Try Again"** retry button.
-  3. **Success State:** Parses JSON response and renders repository cards with:
-     - Repository Name & Direct Link
-     - Description
-     - Programming Language
-     - Stargazers Count (⭐)
-     - Forks Count (🍴)
-4. **Supplementary Enhancements:**
-   - **Real-time Search Filter:** Instantly filters repositories by keyword/name.
-   - **Simulate Error Mode:** Interactive toggle to test the error boundary / failure handling during lab viva evaluation.
-
----
-
-## 💻 How to Run Locally
-
-```bash
-# Navigate to the portfolio directory
-cd Practical-01
-
-# Install dependencies
-npm install
-
-# Start Vite development server
-npm run dev
+### 🔄 End-to-End Architecture
+```
+React Frontend (localhost:5173)
+ │
+ │ [api.js service: getTasks, createTask, updateTask, deleteTask]
+ ▼
+Express Backend (localhost:5000)
+ │
+ │ [CORS enabled, JSON body parser, ObjectId validator, global error handler]
+ ▼
+MongoDB Database (tasks collection)
 ```
 
-Visit `http://localhost:5173` and click on **Projects** in the navigation bar to see live GitHub API data rendering with loading indicators and search filter.
+### ✨ Full-Stack Features & Supplementary Solutions:
+1. **Centralized API Client (`services/api.js`):** Unified REST client configuring `BASE_URL = http://localhost:5000` with clean error unpacking.
+2. **Optimistic UI Updates:** New tasks are immediately rendered in the UI list before the server response finishes, providing instant user feedback. If the API fails, the state automatically rolls back.
+3. **Delete Confirmation Dialog:** Interactive modal prompt protecting users against accidental task deletion.
+4. **Toast Notification System (`components/Toast.jsx`):** Non-blocking notifications displaying operation status (success / error) for every create, update, and delete action.
+5. **Real-time Synchronization:** Complete CRUD cycle (Create, View, Update status, Delete) synchronized between the browser and backend database.
+
+---
+
+## 💻 How to Run the Full-Stack Application Locally
+
+### 1. Start the Backend Server (Terminal 1)
+```bash
+cd backend
+npm install
+npm start
+# Server listens on http://localhost:5000 with MongoDB connected
+```
+
+### 2. Start the Frontend Dev Server (Terminal 2)
+```bash
+cd Practical-01
+npm install
+npm run dev
+# Frontend runs on http://localhost:5173
+```
+
+Navigate to `http://localhost:5173/tasks` to interact with the live full-stack Task Management system.

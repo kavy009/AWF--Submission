@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 require('dotenv').config();
 
 const Task = require('./models/Task');
@@ -8,7 +9,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/taskdb';
 
-// 1. Built-in JSON body parser
+// 1. Enable Cross-Origin Resource Sharing (CORS) for React frontend
+app.use(cors());
+
+// 2. Built-in JSON body parser
 app.use(express.json());
 
 // 2. Global Request Logging Middleware

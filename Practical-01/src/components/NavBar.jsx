@@ -31,6 +31,16 @@ function NavBar({ darkMode, onToggleTheme }) {
           </li>
           <li>
             <NavLink
+              to="/tasks"
+              className={({ isActive }) =>
+                isActive ? 'nav-link-btn active' : 'nav-link-btn'
+              }
+            >
+              Tasks (Full Stack)
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
               to="/contact"
               className={({ isActive }) =>
                 isActive ? 'nav-link-btn active' : 'nav-link-btn'
