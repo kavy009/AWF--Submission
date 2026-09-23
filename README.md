@@ -19,7 +19,7 @@
 | **05** | MongoDB Integration & Schema Design with Mongoose | MongoDB, Mongoose ODM, Schema Validation, Pre-Save Hooks | ✅ Completed |
 | **06** | Full Stack Integration (React + Node + MongoDB) | Full-Stack MERN, CORS, API Synchronization, Optimistic UI | ✅ Completed |
 | **07** | Authentication & Middleware Pipeline | JWT (JSON Web Tokens), bcryptjs, Auth Middleware, Protected Routes | ✅ Completed |
-| **08** | Performance Optimization & Lazy Loading in React | React.lazy(), Suspense, Code Splitting, DevTools | ⏳ Pending |
+| **08** | Performance Optimization & Lazy Loading in React | React.lazy(), Suspense, Code Splitting, DevTools Profiler | ✅ Completed |
 | **09** | In-Memory Caching & Query Optimization | node-cache, Cache Invalidation, Response Profiling | ⏳ Pending |
 
 ---
@@ -27,7 +27,7 @@
 ## 🚀 Running the Full Stack Application Locally
 
 The project is structured as a clean monorepo separating frontend and backend:
-- `Practical-01/`: Vite + React 18 frontend application
+- `Practical-01/`: Vite + React 18 frontend application (with Code-Splitting & Lazy Loading)
 - `backend/`: Node.js + Express + Mongoose + JWT REST API backend
 
 ### Terminal 1 - Backend Server:

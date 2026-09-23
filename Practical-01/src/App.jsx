@@ -1,13 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import NavBar from './components/NavBar';
 import Footer from './components/Footer';
-import Home from './pages/Home';
-import Contact from './pages/Contact';
-import NotFound from './pages/NotFound';
-import Projects from './components/Projects';
-import TaskManager from './pages/TaskManager';
-import AuthPage from './pages/AuthPage';
+import PageFallback from './components/PageFallback';
+
+// Route-based Code Splitting using React.lazy() (Practical 8 Core Requirement)
+const Home = lazy(() => import('./pages/Home'));
+const Projects = lazy(() => import('./components/Projects'));
+const TaskManager = lazy(() => import('./pages/TaskManager'));
+const Contact = lazy(() => import('./pages/Contact'));
+const AuthPage = lazy(() => import('./pages/AuthPage'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+// Supplementary: Heavy Component Lazy Loading on Demand
+const PerformanceProfiler = lazy(() => import('./components/PerformanceProfiler'));
 
 function App() {
   // useState variable for theme mode toggle (Supplementary requirement)
@@ -23,6 +29,9 @@ function App() {
     }
   });
 
+  // Practical 8: State to trigger on-demand lazy loaded profiler component
+  const [showProfiler, setShowProfiler] = useState(false);
+
   const handleLogout = () => {
     localStorage.removeItem('awf_auth_token');
     localStorage.removeItem('awf_auth_user');
@@ -36,7 +45,7 @@ function App() {
     themeColor: '#6366f1',
     bio: 'I am a 3rd-year student pursuing Information Technology / Computer Engineering at Charotar University of Science and Technology (CHARUSAT). I focus on modern frontend frameworks, RESTful API architecture, and scalable full-stack applications.',
     education: {
-      degree: 'B.Tech in Information Technology',
+      degree: 'B.Tech in Computer Engineering',
       institution: 'Charotar University of Science and Technology (CHARUSAT)',
       field: 'Advanced Web Development Frameworks (ITUE301)'
     },
@@ -78,26 +87,46 @@ function App() {
         onToggleTheme={handleToggleTheme}
         authUser={authUser}
       />
+
+      {/* Floating button to trigger on-demand lazy loaded profiler */}
+      <button
+        type="button"
+        className="floating-profiler-btn"
+        onClick={() => setShowProfiler(true)}
+        title="Open Lazy-Loaded Performance Profiler (Practical 8)"
+      >
+        ⚡ Performance Profiler
+      </button>
+
+      {/* Lazy loaded Heavy Component wrapped in Suspense */}
+      {showProfiler && (
+        <Suspense fallback={<div className="profiler-loading">Loading Profiler Chunk...</div>}>
+          <PerformanceProfiler onClose={() => setShowProfiler(false)} />
+        </Suspense>
+      )}
       
       <main className="main-content">
-        <Routes>
-          <Route path="/" element={<Home studentData={studentData} />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/tasks" element={<TaskManager authUser={authUser} />} />
-          <Route
-            path="/auth"
-            element={
-              <AuthPage
-                user={authUser}
-                onAuthSuccess={setAuthUser}
-                onLogout={handleLogout}
-              />
-            }
-          />
-          <Route path="/contact" element={<Contact studentEmail={studentData.email} />} />
-          {/* Supplementary 404 Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        {/* Suspense wrapper with fallback UI for lazy-loaded route chunks */}
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/" element={<Home studentData={studentData} />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/tasks" element={<TaskManager authUser={authUser} />} />
+            <Route
+              path="/auth"
+              element={
+                <AuthPage
+                  user={authUser}
+                  onAuthSuccess={setAuthUser}
+                  onLogout={handleLogout}
+                />
+              }
+            />
+            <Route path="/contact" element={<Contact studentEmail={studentData.email} />} />
+            {/* Supplementary 404 Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </main>
 
       <Footer
