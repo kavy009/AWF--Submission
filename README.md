@@ -1,7 +1,7 @@
 # ITUE301: Advanced Web Development Frameworks - Lab Submissions
 
 **Student Name:** Kavya Chauhan  
-**Student ID / Roll No:** 24CE017 
+**Student ID / Roll No:** 24CE017  
 **Institution:** Charotar University of Science and Technology (CHARUSAT)  
 **Faculty of Technology and Engineering**  
 **Repository:** [https://github.com/kavy009/AWF--Submission](https://github.com/kavy009/AWF--Submission)  
@@ -15,7 +15,7 @@
 | **01** | Introduction to React & Component Architecture | React 18, Vite, Reusable Components, Props | ✅ Completed |
 | **02** | State Management & Routing in React | React Router v6, useState, Controlled Forms, 404 | ✅ Completed |
 | **03** | API Integration & Data Rendering in React | Fetch API, useEffect, GitHub REST API, Spinner, Error Handling | ✅ Completed |
-| **04** | Building a RESTful API with Node.js & Express | Express.js, Custom Middleware, CRUD Operations | ⏳ Pending |
+| **04** | Building a RESTful API with Node.js & Express | Express.js, Custom Middleware, In-Memory CRUD, Error Pipeline | ✅ Completed |
 | **05** | MongoDB Integration & Schema Design with Mongoose | MongoDB, Mongoose ODM, Schema Validation | ⏳ Pending |
 | **06** | Full Stack Integration (React + Node + MongoDB) | Full-Stack MERN, CORS, API Synchronization | ⏳ Pending |
 | **07** | Authentication & Middleware Pipeline | JWT (JSON Web Tokens), bcryptjs, Auth Middleware | ⏳ Pending |
@@ -25,9 +25,9 @@
 ---
 
 ## 🛠️ Tech Stack Across Practicals
-- **Frontend:** React 18, Vite, React Router v6, Vanilla CSS3 / Modern Styling
-- **Backend:** Node.js (v18+), Express.js
-- **Database:** MongoDB, Mongoose ODM
-- **Authentication:** JWT (jsonwebtoken), bcryptjs
-- **Optimization & Caching:** React.lazy, Suspense, node-cache
+- **Frontend (`Practical-01/`):** React 18, Vite, React Router v6, Vanilla CSS3 / Modern Styling
+- **Backend (`backend/`):** Node.js (v18+), Express.js, RESTful API, Custom Middlewares
+- **Database:** MongoDB, Mongoose ODM (Practicals 5–9)
+- **Authentication:** JWT (jsonwebtoken), bcryptjs (Practical 7)
+- **Optimization & Caching:** React.lazy, Suspense, node-cache (Practicals 8 & 9)
 - **Tools & Testing:** Git, DevTools, Postman / REST Client
