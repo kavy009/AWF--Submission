@@ -14,7 +14,7 @@
 | :---: | :--- | :--- | :---: |
 | **01** | Introduction to React & Component Architecture | React 18, Vite, Reusable Components, Props | ✅ Completed |
 | **02** | State Management & Routing in React | React Router v6, useState, Controlled Forms, 404 | ✅ Completed |
-| **03** | API Integration & Data Rendering in React | Fetch/Axios, useEffect, GitHub REST API | ⏳ Pending |
+| **03** | API Integration & Data Rendering in React | Fetch API, useEffect, GitHub REST API, Spinner, Error Handling | ✅ Completed |
 | **04** | Building a RESTful API with Node.js & Express | Express.js, Custom Middleware, CRUD Operations | ⏳ Pending |
 | **05** | MongoDB Integration & Schema Design with Mongoose | MongoDB, Mongoose ODM, Schema Validation | ⏳ Pending |
 | **06** | Full Stack Integration (React + Node + MongoDB) | Full-Stack MERN, CORS, API Synchronization | ⏳ Pending |

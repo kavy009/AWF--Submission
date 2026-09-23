@@ -36,7 +36,7 @@ function App() {
     ],
     email: 'chauhankavya9116@gmail.com',
     github: 'https://github.com/kavy009',
-    rollNo: '22IT009'
+    rollNo: '24CE017'
   };
 
   const handleToggleTheme = () => {
