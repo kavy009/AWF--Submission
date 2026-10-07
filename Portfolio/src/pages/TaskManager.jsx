@@ -24,6 +24,10 @@ function TaskManager() {
   // Priority filter state
   const [filterPriority, setFilterPriority] = useState('all');
 
+  // Practical 10: Event-Driven Background Notifications State
+  const [eventLogs, setEventLogs] = useState([]);
+  const [showEvents, setShowEvents] = useState(true);
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
   };
@@ -31,6 +35,18 @@ function TaskManager() {
   const clearToast = () => {
     setToast({ message: '', type: 'success' });
   };
+
+  // Practical 10: Fetch background event logs
+  const loadEventLogs = useCallback(async () => {
+    try {
+      const res = await api.getEventLogs();
+      if (res && res.events) {
+        setEventLogs(res.events);
+      }
+    } catch {
+      // Backend may be offline or starting up
+    }
+  }, []);
 
   // Fetch tasks from Express / MongoDB backend
   const loadTasks = useCallback(async () => {
@@ -52,7 +68,8 @@ function TaskManager() {
 
   useEffect(() => {
     loadTasks();
-  }, [loadTasks]);
+    loadEventLogs();
+  }, [loadTasks, loadEventLogs]);
 
   // Create Task with Optimistic UI Update (Supplementary requirement)
   const handleCreateTask = async (e) => {
@@ -98,6 +115,8 @@ function TaskManager() {
         prev.map((t) => (t._id === tempId || t.id === tempId ? serverTask : t))
       );
       showToast(`Task "${serverTask.title}" created successfully!`, 'success');
+      setTimeout(loadEventLogs, 200);
+      setTimeout(loadEventLogs, 1800);
     } catch (err) {
       // Rollback on failure
       setTasks((prev) => prev.filter((t) => t._id !== tempId && t.id !== tempId));
@@ -146,9 +165,32 @@ function TaskManager() {
     try {
       await api.deleteTask(taskId);
       showToast(`Task "${taskTitle}" deleted successfully`, 'success');
+      setTimeout(loadEventLogs, 200);
+      setTimeout(loadEventLogs, 1300);
     } catch (err) {
       showToast(`Delete failed: ${err.message}`, 'error');
       loadTasks(); // re-fetch if failed
+    }
+  };
+
+  // Practical 10: Event Telemetry Handlers
+  const handleSimulateEventError = async () => {
+    try {
+      await api.simulateEventError('Simulated error from React UI to test EventEmitter error boundary');
+      showToast('Emitted error to EventEmitter! Server caught safely.', 'info');
+      setTimeout(loadEventLogs, 200);
+    } catch (err) {
+      showToast('Error test failed: ' + err.message, 'error');
+    }
+  };
+
+  const handleClearEventLogs = async () => {
+    try {
+      await api.clearEventLogs();
+      setEventLogs([]);
+      showToast('Event telemetry logs cleared', 'success');
+    } catch (err) {
+      showToast('Failed to clear logs: ' + err.message, 'error');
     }
   };
 
@@ -359,6 +401,138 @@ function TaskManager() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* Practical 10: Event-Driven Background Notifications Panel */}
+      {/* ========================================================= */}
+      <div className="event-telemetry-panel">
+        <div className="event-panel-header">
+          <div className="event-header-info">
+            <span className="event-badge-title">⚡ Practical 10: Event-Driven Architecture</span>
+            <h3>Background Processing Telemetry (Node.js EventEmitter)</h3>
+            <p className="panel-desc">
+              Demonstrates asynchronous, non-blocking background notifications decoupled from the main request/response cycle.
+              Main API response returns immediately, while listeners dispatch notifications in the background.
+            </p>
+          </div>
+          <div className="event-header-actions">
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={loadEventLogs}
+              title="Refresh background event logs"
+            >
+              🔄 Refresh Logs ({eventLogs.length})
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={handleSimulateEventError}
+              title="Emit error event to test safe error boundary without crashing"
+            >
+              ⚠️ Test Error Boundary
+            </button>
+            {eventLogs.length > 0 && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={handleClearEventLogs}
+                title="Clear all event telemetry"
+              >
+                🧹 Clear
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setShowEvents(!showEvents)}
+            >
+              {showEvents ? 'Hide Details ▲' : 'Show Details ▼'}
+            </button>
+          </div>
+        </div>
+
+        {showEvents && (
+          <div className="event-panel-body">
+            {eventLogs.length === 0 ? (
+              <div className="event-empty-state">
+                <p>No background events logged yet. Create or delete a task above to see live EventEmitter notifications!</p>
+              </div>
+            ) : (
+              <div className="event-logs-grid">
+                {eventLogs.map((evt) => {
+                  const isCreated = evt.event === 'task-created';
+                  const isDeleted = evt.event === 'task-deleted';
+                  const isError = evt.event === 'error';
+
+                  return (
+                    <div
+                      key={evt.id}
+                      className={`event-card event-${isCreated ? 'created' : isDeleted ? 'deleted' : 'error'}`}
+                    >
+                      <div className="event-card-header">
+                        <span className={`event-type-tag tag-${evt.event}`}>
+                          {isCreated && '🔔 task-created'}
+                          {isDeleted && '🗑️ task-deleted'}
+                          {isError && '⚠️ error-event'}
+                        </span>
+                        <span className="event-status-badge">{evt.status?.toUpperCase()}</span>
+                      </div>
+
+                      {evt.title && (
+                        <div className="event-title-row">
+                          <strong>"{evt.title}"</strong>
+                          {evt.priority && (
+                            <span className={`task-badge badge-${evt.priority}`}>
+                              {evt.priority}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {evt.errorMessage && (
+                        <div className="event-error-text">
+                          {evt.errorMessage}
+                        </div>
+                      )}
+
+                      <div className="event-timestamps">
+                        {evt.apiResponseTimestamp && (
+                          <div className="time-item">
+                            <span className="time-label">1. API Response Sent:</span>
+                            <span className="time-val">{evt.apiResponseTimestamp.split('T')[1]?.replace('Z', '')}</span>
+                          </div>
+                        )}
+                        {evt.listenerReceivedAt && (
+                          <div className="time-item">
+                            <span className="time-label">2. Listener Received:</span>
+                            <span className="time-val">{evt.listenerReceivedAt.split('T')[1]?.replace('Z', '')}</span>
+                          </div>
+                        )}
+                        {evt.listenerCompletedAt && (
+                          <div className="time-item highlight-time">
+                            <span className="time-label">3. Worker Finished:</span>
+                            <span className="time-val">{evt.listenerCompletedAt.split('T')[1]?.replace('Z', '')}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="event-card-footer">
+                        {evt.delayMs && (
+                          <span className="event-delay-tag">⏱️ Simulated Async Delay: {evt.delayMs}ms</span>
+                        )}
+                        {evt.user && (
+                          <span className="event-user-tag">👤 {evt.user}</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

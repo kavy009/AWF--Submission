@@ -8,6 +8,8 @@ const auth = require('./middleware/auth');
 const { validateTaskInput } = require('./middleware/validation');
 const authRoutes = require('./routes/auth');
 const cache = require('./utils/cache');
+const taskEvents = require('./events');
+require('./listeners');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -247,10 +249,22 @@ app.post('/tasks', auth, validateTaskInput, async (req, res, next) => {
     cache.del('all_tasks');
     console.log('[Cache Invalidation] Cleared cache key: "all_tasks" after POST');
 
+    const apiResponseTimestamp = new Date().toISOString();
+    console.log(`[API] Response sent for POST /tasks at ${apiResponseTimestamp}`);
+
     res.status(201).json({
       success: true,
       message: 'Task created successfully',
+      apiResponseTimestamp,
       data: savedTask
+    });
+
+    // Practical 10: Asynchronously emit task-created event AFTER response is sent
+    const taskPayload = savedTask && typeof savedTask.toObject === 'function' ? savedTask.toObject() : savedTask;
+    taskEvents.emit('task-created', {
+      ...taskPayload,
+      user: req.user,
+      apiResponseTimestamp
     });
   } catch (err) {
     next(err);
@@ -329,14 +343,60 @@ app.delete('/tasks/:id', auth, validateObjectId, async (req, res, next) => {
     cache.del(`task_${req.params.id}`);
     console.log(`[Cache Invalidation] Cleared cache keys after DELETE for task ${req.params.id}`);
 
+    const apiResponseTimestamp = new Date().toISOString();
+    console.log(`[API] Response sent for DELETE /tasks/${req.params.id} at ${apiResponseTimestamp}`);
+
     res.status(200).json({
       success: true,
       message: 'Task deleted successfully',
+      apiResponseTimestamp,
       data: deletedTask
+    });
+
+    // Practical 10 Supplementary: Emit task-deleted event asynchronously
+    const payload = deletedTask && typeof deletedTask.toObject === 'function' ? deletedTask.toObject() : deletedTask;
+    taskEvents.emit('task-deleted', {
+      ...payload,
+      user: req.user,
+      apiResponseTimestamp
     });
   } catch (err) {
     next(err);
   }
+});
+
+// ==========================================
+// Event-Driven Architecture Telemetry Routes (Practical 10)
+// ==========================================
+
+// GET /events/logs - Fetch background event logs to verify non-blocking execution & timestamps
+app.get('/events/logs', (req, res) => {
+  res.status(200).json({
+    success: true,
+    count: taskEvents.getEventLogs().length,
+    events: taskEvents.getEventLogs()
+  });
+});
+
+// DELETE /events/logs - Clear event logs history
+app.delete('/events/logs', (req, res) => {
+  taskEvents.clearEventLogs();
+  res.status(200).json({
+    success: true,
+    message: 'Event logs successfully cleared'
+  });
+});
+
+// POST /events/simulate-error - Trigger a test error event to verify safe handling
+app.post('/events/simulate-error', (req, res) => {
+  const errorMessage = req.body?.message || 'Simulated error in EventEmitter pipeline for testing';
+  console.log('[API] Triggering simulated EventEmitter error test...');
+  taskEvents.emit('error', new Error(errorMessage));
+  res.status(200).json({
+    success: true,
+    message: 'Simulated error emitted to EventEmitter error listener without crashing server',
+    emittedError: errorMessage
+  });
 });
 
 // Health / Status endpoint for quick verification
@@ -345,6 +405,14 @@ app.get('/health', (req, res) => {
     status: 'healthy',
     databaseConnected: mongoose.connection.readyState === 1,
     cacheStats: cache.getStats(),
+    eventStats: {
+      listeners: {
+        'task-created': taskEvents.listenerCount('task-created'),
+        'task-deleted': taskEvents.listenerCount('task-deleted'),
+        error: taskEvents.listenerCount('error')
+      },
+      totalEventsLogged: taskEvents.getEventLogs().length
+    },
     timestamp: new Date().toISOString()
   });
 });

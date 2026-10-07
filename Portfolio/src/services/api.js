@@ -119,6 +119,29 @@ export const api = {
       throw new Error(err.message || `Failed to delete task`);
     }
     return res.json();
+  },
+
+  // Practical 10: Event-Driven Background Notifications Telemetry
+  async getEventLogs() {
+    const res = await fetch(`${BASE_URL}/events/logs`);
+    if (!res.ok) {
+      throw new Error('Failed to fetch event logs');
+    }
+    return res.json();
+  },
+
+  async clearEventLogs() {
+    const res = await fetch(`${BASE_URL}/events/logs`, { method: 'DELETE' });
+    return res.json();
+  },
+
+  async simulateEventError(message) {
+    const res = await fetch(`${BASE_URL}/events/simulate-error`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message || 'Simulated error in EventEmitter pipeline' })
+    });
+    return res.json();
   }
 };
 

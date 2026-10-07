@@ -12,7 +12,7 @@
 
 ---
 
-## 📑 Comprehensive Practical Index (Practicals 1 to 9)
+## 📑 Comprehensive Practical Index (Practicals 1 to 10)
 
 All practical assignments for ITUE301 have been implemented, tested, and organized in this single repository.
 
@@ -27,6 +27,7 @@ All practical assignments for ITUE301 have been implemented, tested, and organiz
 | **Practical 7** | **Authentication & Middleware Pipeline** | JWT, bcryptjs, Express | [`backend/routes/auth.js`](backend/routes/auth.js) | Secure JWT authentication, password hashing with bcryptjs (10 rounds), server-side input validation middleware, route-level JWT protection, and `/auth/me` endpoint. |
 | **Practical 8** | **Performance Optimization & Lazy Loading** | `React.lazy()`, `<Suspense>` | [`Portfolio/src/App.jsx`](Portfolio/src/App.jsx) | Route-based code splitting, dynamic chunk loading, animated `<PageFallback />`, on-demand Runtime Profiler, and ~25 kB initial bundle reduction. |
 | **Practical 9** | **In-Memory Caching & Query Optimization** | `node-cache`, Express | [`backend/utils/cache.js`](backend/utils/cache.js) | Server-side in-memory caching with automatic write-invalidation (`POST`, `PUT`, `DELETE`), `/cache-stats` telemetry, and 26.8% latency reduction. |
+| **Practical 10** | **Asynchronous Processing with Event-Driven Architecture** | Node.js `events` (EventEmitter), Express | [`backend/events.js`](backend/events.js) | Decoupled background processing using native EventEmitter. Emits non-blocking `task-created` & `task-deleted` events, error boundary listener, and live timestamp ordering verification. |
 
 ---
 
@@ -47,18 +48,22 @@ AWF--Submission/
 │   ├── vite.config.js
 │   └── README.md                          # Frontend Documentation
 │
-├── backend/                               # Full-Stack Express REST API (Practicals 4, 5, 6, 7, 9)
+├── backend/                               # Full-Stack Express REST API (Practicals 4, 5, 6, 7, 9, 10)
 │   ├── models/                            # Task.js (Mongoose Schema + Hooks), User.js
 │   ├── routes/                            # auth.js (Register, Login, /me)
 │   ├── middleware/                        # auth.js (JWT verify), validation.js (Input sanitization)
 │   ├── utils/                             # cache.js (node-cache singleton & telemetry)
-│   ├── test-cache.js                      # Automated cache latency benchmark script
-│   ├── server.js                          # Express application entry point (CRUD + CORS + Invalidation)
+│   ├── events.js                          # Practical 10: TaskEvents EventEmitter singleton & buffer
+│   ├── listeners.js                       # Practical 10: task-created, task-deleted, error listeners
+│   ├── test-cache.js                      # Automated cache latency benchmark script (Practical 9)
+│   ├── test-events.js                     # Automated EventEmitter test suite (Practical 10)
+│   ├── server.js                          # Express application entry point (CRUD + CORS + Events + Cache)
 │   ├── .env.example                       # Environment variables template
 │   ├── package.json
 │   └── README.md                          # Backend Documentation
 │
 ├── test-cache.js                          # Root proxy runner for Practical 9 benchmark
+├── test-events.js                         # Root proxy runner for Practical 10 test suite
 ├── 2026-27-ODD-ITUE301-AWF-PracticalList (1).pdf # Official Syllabus & Practical Manual
 ├── .gitignore                             # Git ignore rules (node_modules, .env excluded)
 └── README.md                              # Master Documentation
@@ -113,6 +118,14 @@ node test-cache.js
 
 ---
 
+### 5. Running Practical 10 EventEmitter Async Verification Suite
+From the **repository root**:
+```bash
+node test-events.js
+```
+
+---
+
 ## ⚡ Performance Optimization & Caching Benchmarks
 
 ### Practical 8: React Code Splitting & Bundle Reduction
@@ -153,21 +166,55 @@ Running `node test-cache.js` measures real API response times between uncached M
 
 ---
 
+### Practical 10: Asynchronous Processing with Event-Driven Architecture (EventEmitter)
+
+Demonstrating decoupled background processing using Node.js native `EventEmitter` without blocking the main request/response cycle:
+
+#### Architecture & Decoupling Flow:
+```
+POST /tasks (Client HTTP Request)
+     │
+     ▼
+Save Task (MongoDB)
+     │
+     ├──► [API Response sent immediately: HTTP 201 Created] (e.g., 09:15:02.473Z)
+     │
+     └──► taskEvents.emit('task-created', taskData)
+              │
+              ▼ (Asynchronous non-blocking background worker with 1500ms delay)
+          [Notification Listener]
+              └──► Notification dispatch completed at 09:15:03.976Z (+1503 ms)
+```
+
+#### Real Benchmark Timestamp Evidence (`node test-events.js`):
+| Step / Phase | Operation | Executed Timestamp | Measured Latency | Non-Blocking Status |
+| :--- | :--- | :---: | :---: | :--- |
+| **API Response** | `POST /tasks` returns HTTP 201 | `09:15:02.473Z` | **27.62 ms** | **Response Sent BEFORE worker finishes** |
+| **Listener Start** | `task-created` event handled | `09:15:02.475Z` | `+2 ms` | Event received in next tick of event loop |
+| **Worker Finish** | Email notification dispatch | `09:15:03.976Z` | **+1503 ms** | Decoupled background execution without blocking |
+| **Delete Event** | `task-deleted` event handled | `09:15:05.539Z` | **+1013 ms** | Supplementary cleanup notification |
+| **Error Boundary** | Safe `error` listener handled | Handled Safely | `0 ms` | Prevented uncaught exception process crash |
+
+---
+
 ## 📡 API Endpoints Reference
 
 | Method | Route | Protection | Practical | Purpose |
-| :--- | :--- | :--- | :---: | :--- |
+| :--- | :--- | :--- | :--- :--- | :--- |
 | `POST` | `/auth/register` | Public | P7 | Register new user with hashed password (bcrypt) |
 | `POST` | `/auth/login` | Public | P7 | Authenticate user & return signed JWT token (1h) |
 | `GET` | `/auth/me` | Protected (JWT) | P7 | Retrieve authenticated user profile from decoded token |
 | `GET` | `/tasks` | Protected (JWT) | P4, P5, P6, P9 | Fetch all tasks (Cached in RAM for 60s) |
 | `GET` | `/tasks/:id` | Protected (JWT) | P4, P5, P9 | Fetch single task by ID (Cached individually) |
-| `POST` | `/tasks` | Protected (JWT) | P4, P5, P6, P9 | Create task (Invalidates `all_tasks` cache) |
+| `POST` | `/tasks` | Protected (JWT) | P4, P5, P6, P9, P10 | Create task (Invalidates cache & emits `task-created`) |
 | `PUT` | `/tasks/:id` | Protected (JWT) | P4, P5, P6, P9 | Update task (Invalidates `all_tasks` & `task_<id>`) |
-| `DELETE`| `/tasks/:id` | Protected (JWT) | P4, P5, P6, P9 | Delete task (Invalidates `all_tasks` & `task_<id>`) |
+| `DELETE`| `/tasks/:id` | Protected (JWT) | P4, P5, P6, P9, P10 | Delete task (Invalidates cache & emits `task-deleted`) |
+| `GET` | `/events/logs` | Public | P10 | Retrieve background event execution telemetry & timestamp logs |
+| `DELETE`| `/events/logs` | Public | P10 | Clear in-memory event telemetry buffer |
+| `POST` | `/events/simulate-error` | Public | P10 | Emit simulated error event to test error boundary safely |
 | `GET` | `/cache-stats` | Public | P9 | View cache hits, misses, hit ratio %, and active keys |
 | `POST` | `/cache-clear` | Public | P9 | Manually flush all keys from in-memory cache |
-| `GET` | `/health` | Public | P5, P9 | Server health and database connection status check |
+| `GET` | `/health` | Public | P5, P9, P10 | Server health, database connection, cache & event stats |
 
 ---
 

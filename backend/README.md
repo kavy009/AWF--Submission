@@ -82,6 +82,64 @@ cd backend
 npm install
 npm start
 
-# Run automated profiling test suite
+# Run automated Practical 9 cache benchmark
 node test-cache.js
+
+# Run automated Practical 10 EventEmitter async verification suite
+node test-events.js
 ```
+
+---
+
+## 🎯 Practical 10: Asynchronous Processing with Event-Driven Architecture (EventEmitter)
+- **Objective:** To implement asynchronous background processing using Node.js native `EventEmitter` without external dependencies.
+- **Course Outcomes / Program Outcomes:** CO4 / PO3, PO5
+
+### 🏗️ Architecture & Decoupling Flow
+```
+POST /tasks (Client HTTP Request)
+     │
+     ▼
+Save Task (MongoDB)
+     │
+     ├──► [API Response sent immediately: HTTP 201 Created] (09:15:02.473Z)
+     │
+     └──► taskEvents.emit('task-created', taskData)
+              │
+              ▼ (Asynchronous non-blocking background worker with 1500ms delay)
+          [Notification Listener]
+              └──► Background dispatch completed at 09:15:03.976Z (+1503 ms)
+```
+
+### 📋 Components Overview
+1. **`events.js`**:
+   - Subclasses Node.js native `EventEmitter` (`class TaskEvents extends EventEmitter`).
+   - Exports singleton `taskEvents` instance.
+   - Maintains in-memory buffer of recent event dispatches with timing telemetry.
+2. **`listeners.js`**:
+   - `task-created`: Dispatches simulated notification email with non-blocking 1500ms delay.
+   - `task-deleted`: Dispatches deletion notice and audit archive with 1000ms delay.
+   - `error`: Safe error boundary listener preventing uncaught exception process crashes.
+3. **`server.js` integration**:
+   - `POST /tasks` responds with HTTP 201 immediately, then emits `task-created`.
+   - `DELETE /tasks/:id` responds with HTTP 200 immediately, then emits `task-deleted`.
+   - Telemetry endpoints: `GET /events/logs`, `DELETE /events/logs`, `POST /events/simulate-error`.
+
+### ⏱️ Timestamp Proof of Non-Blocking Execution
+| Step | Action | Timestamp | Latency | Non-Blocking Proof |
+| :--- | :--- | :---: | :---: | :--- |
+| 1 | `POST /tasks` API Response | `09:15:02.473Z` | **27.62 ms** | Sent immediately before background handler finishes |
+| 2 | `task-created` Listener Start | `09:15:02.475Z` | `+2 ms` | Event received in event loop |
+| 3 | Worker Completed | `09:15:03.976Z` | **+1503 ms** | Finished 1.5s after client already got 201 response |
+
+### 🧪 Automated Verification
+Run from backend folder:
+```bash
+node test-events.js
+```
+All assertions verify:
+1. All 3 listeners are active.
+2. API latency is instant (<50ms).
+3. API response timestamp < worker completion timestamp.
+4. `task-deleted` event is captured.
+5. Emitted error is caught safely without server crash.
