@@ -143,3 +143,29 @@ All assertions verify:
 3. API response timestamp < worker completion timestamp.
 4. `task-deleted` event is captured.
 5. Emitted error is caught safely without server crash.
+
+---
+
+## 🎯 Practical 11: Containerization with Docker & Docker Compose
+- **Objective:** To containerize the full-stack application using Docker and orchestrate services using Docker Compose.
+- **Course Outcomes / Program Outcomes:** CO5 / PO3, PO5
+
+### 🐳 Backend Docker Configuration
+- **Base Image:** `node:18-alpine`
+- **Workdir:** `/app`
+- **Dependencies:** Layer-cached `package*.json` with `npm install` inside Linux container
+- **Exposed Port:** `5000`
+- **Environment:**
+  - `PORT=5000`
+  - `MONGO_URI=mongodb://mongodb:27017/taskdb` (Inter-container DNS resolution via service name)
+- **Build Context Exclusion:** `.dockerignore` excludes `node_modules` and `.env`
+- **Startup:** `CMD ["node", "server.js"]`
+
+### 💻 Running Docker Services
+```bash
+# Run automated Docker configuration verification
+node test-docker.js
+
+# Build and launch complete multi-container stack (from project root)
+docker compose up --build
+```

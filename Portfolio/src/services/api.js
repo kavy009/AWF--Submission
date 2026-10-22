@@ -1,5 +1,5 @@
-// Central API client with JWT Authentication support (Practical 7)
-const BASE_URL = 'http://localhost:5000';
+// Central API client with JWT Authentication support (Practical 7 & 11)
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function getAuthHeader() {
   const token = localStorage.getItem('awf_auth_token');

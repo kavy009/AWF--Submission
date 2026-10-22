@@ -1,0 +1,78 @@
+# ==============================================================================
+# ITUE301: Advanced Web Development Frameworks - Practical 11
+# Multi-Container Orchestration with Docker Compose
+# Services: Frontend (React/Vite) + Backend (Node/Express) + Database (MongoDB)
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. MongoDB Database Service
+  # ----------------------------------------------------------------------------
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=taskdb
+    volumes:
+      # Named volume for MongoDB persistence across container restarts (Supplementary)
+      - mongo-data:/data/db
+    networks:
+      - app-network
+
+  # ----------------------------------------------------------------------------
+  # 2. Node.js & Express REST API Backend Service
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: task-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      # Uses internal Docker service name "mongodb" rather than "localhost"
+      - MONGO_URI=mongodb://mongodb:27017/taskdb
+      - JWT_SECRET=awf_super_secret_jwt_key_2026_charusat
+      - NODE_ENV=production
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+
+  # ----------------------------------------------------------------------------
+  # 3. React 18 + Vite Frontend Application Service
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./Portfolio
+      dockerfile: Dockerfile
+    container_name: task-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      # Browser on host machine reaches the backend via localhost:5000
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+# ==============================================================================
+# Named Persistent Storage Volumes
+# ==============================================================================
+volumes:
+  mongo-data:
+    driver: local
+
+# ==============================================================================
+# Isolated Internal Bridge Network
+# ==============================================================================
+networks:
+  app-network:
+    driver: bridge

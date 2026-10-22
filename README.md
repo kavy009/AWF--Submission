@@ -12,7 +12,7 @@
 
 ---
 
-## 📑 Comprehensive Practical Index (Practicals 1 to 10)
+## 📑 Comprehensive Practical Index (Practicals 1 to 11)
 
 All practical assignments for ITUE301 have been implemented, tested, and organized in this single repository.
 
@@ -28,6 +28,7 @@ All practical assignments for ITUE301 have been implemented, tested, and organiz
 | **Practical 8** | **Performance Optimization & Lazy Loading** | `React.lazy()`, `<Suspense>` | [`Portfolio/src/App.jsx`](Portfolio/src/App.jsx) | Route-based code splitting, dynamic chunk loading, animated `<PageFallback />`, on-demand Runtime Profiler, and ~25 kB initial bundle reduction. |
 | **Practical 9** | **In-Memory Caching & Query Optimization** | `node-cache`, Express | [`backend/utils/cache.js`](backend/utils/cache.js) | Server-side in-memory caching with automatic write-invalidation (`POST`, `PUT`, `DELETE`), `/cache-stats` telemetry, and 26.8% latency reduction. |
 | **Practical 10** | **Asynchronous Processing with Event-Driven Architecture** | Node.js `events` (EventEmitter), Express | [`backend/events.js`](backend/events.js) | Decoupled background processing using native EventEmitter. Emits non-blocking `task-created` & `task-deleted` events, error boundary listener, and live timestamp ordering verification. |
+| **Practical 11** | **Containerization with Docker & Docker Compose** | Docker, Docker Compose, Alpine Linux | [`docker-compose.yml`](docker-compose.yml) | Multi-container orchestration (React frontend + Node/Express backend + MongoDB) with bridge network, multi-stage frontend build, and persistent named volume. |
 
 ---
 
@@ -35,7 +36,7 @@ All practical assignments for ITUE301 have been implemented, tested, and organiz
 
 ```
 AWF--Submission/
-├── Portfolio/                             # Frontend React 18 Application (Practicals 1, 2, 3, 6, 8)
+├── Portfolio/                             # Frontend React 18 Application (Practicals 1, 2, 3, 6, 8, 11)
 │   ├── src/
 │   │   ├── components/                    # Header, Footer, NavBar, Projects, Spinner, ErrorMessage, Toast, PageFallback, PerformanceProfiler
 │   │   ├── pages/                         # Home, Contact, TaskManager, AuthPage, NotFound
@@ -43,12 +44,14 @@ AWF--Submission/
 │   │   ├── App.jsx                        # React Router + React.lazy() + Suspense
 │   │   ├── index.css                      # Unified Design System (Dark/Light mode themes)
 │   │   └── main.jsx                       # BrowserRouter Root Entry
+│   ├── Dockerfile                         # Practical 11: Multi-stage React build & preview runner
+│   ├── .dockerignore                      # Build context exclusion (node_modules, dist, secrets)
 │   ├── index.html
 │   ├── package.json
-│   ├── vite.config.js
+│   ├── vite.config.js                     # Configured with host: 0.0.0.0 for Docker networking
 │   └── README.md                          # Frontend Documentation
 │
-├── backend/                               # Full-Stack Express REST API (Practicals 4, 5, 6, 7, 9, 10)
+├── backend/                               # Full-Stack Express REST API (Practicals 4, 5, 6, 7, 9, 10, 11)
 │   ├── models/                            # Task.js (Mongoose Schema + Hooks), User.js
 │   ├── routes/                            # auth.js (Register, Login, /me)
 │   ├── middleware/                        # auth.js (JWT verify), validation.js (Input sanitization)
@@ -57,13 +60,19 @@ AWF--Submission/
 │   ├── listeners.js                       # Practical 10: task-created, task-deleted, error listeners
 │   ├── test-cache.js                      # Automated cache latency benchmark script (Practical 9)
 │   ├── test-events.js                     # Automated EventEmitter test suite (Practical 10)
+│   ├── test-docker.js                     # Docker configuration test runner (Practical 11)
+│   ├── Dockerfile                         # Practical 11: Node.js 18 Express container image
+│   ├── .dockerignore                      # Backend build context exclusion
 │   ├── server.js                          # Express application entry point (CRUD + CORS + Events + Cache)
 │   ├── .env.example                       # Environment variables template
 │   ├── package.json
 │   └── README.md                          # Backend Documentation
 │
+├── docker-compose.yml                     # Practical 11: Multi-container orchestration (React + Express + Mongo)
+├── .dockerignore                          # Root build context ignore rules
 ├── test-cache.js                          # Root proxy runner for Practical 9 benchmark
 ├── test-events.js                         # Root proxy runner for Practical 10 test suite
+├── test-docker.js                         # Root proxy runner for Practical 11 verification suite
 ├── 2026-27-ODD-ITUE301-AWF-PracticalList (1).pdf # Official Syllabus & Practical Manual
 ├── .gitignore                             # Git ignore rules (node_modules, .env excluded)
 └── README.md                              # Master Documentation
@@ -122,6 +131,35 @@ node test-cache.js
 From the **repository root**:
 ```bash
 node test-events.js
+```
+
+---
+
+### 6. Running the Entire Stack via Docker Compose (Practical 11)
+From the **repository root**, launch all 3 services simultaneously with a single command:
+```bash
+docker compose up --build
+```
+- **React Frontend**: [http://localhost:5173](http://localhost:5173)
+- **Node/Express API**: [http://localhost:5000](http://localhost:5000)
+- **MongoDB**: `localhost:27017`
+
+To view container status:
+```bash
+docker ps
+```
+
+To stop and tear down containers:
+```bash
+docker compose down
+```
+
+---
+
+### 7. Running Practical 11 Docker Verification Suite
+From the **repository root**:
+```bash
+node test-docker.js
 ```
 
 ---
@@ -194,6 +232,49 @@ Save Task (MongoDB)
 | **Worker Finish** | Email notification dispatch | `09:15:03.976Z` | **+1503 ms** | Decoupled background execution without blocking |
 | **Delete Event** | `task-deleted` event handled | `09:15:05.539Z` | **+1013 ms** | Supplementary cleanup notification |
 | **Error Boundary** | Safe `error` listener handled | Handled Safely | `0 ms` | Prevented uncaught exception process crash |
+
+---
+
+### Practical 11: Containerization with Docker & Docker Compose
+
+Containerizing the entire full-stack application into isolated, portable microservices and orchestrating them via Docker Compose.
+
+#### Multi-Container Architecture & Network Topology:
+```
+docker-compose.yml (app-network: bridge)
+  ├── frontend  (React 18 + Vite, built & previewed, port 5173:5173)
+  ├── backend   (Node.js & Express REST API, port 5000:5000)
+  └── mongodb   (Official MongoDB 6.0 engine, port 27017:27017)
+
+Network Topology:
+  Host Browser (localhost:5173) ──► Frontend Container (Vite Preview on 0.0.0.0:5173)
+  Host Browser (localhost:5000) ──► Backend Container (Express on 0.0.0.0:5000)
+  Backend Container ──────────────► mongodb:27017 (Internal Docker DNS resolution)
+  MongoDB Data Directory ─────────► mongo-data (Named persistent host volume)
+```
+
+#### Core Components & Best Practices:
+1. **Frontend Multi-Stage Build ([`Portfolio/Dockerfile`](Portfolio/Dockerfile))**:
+   - **Stage 1 (Builder)**: Installs build dependencies and generates the optimized production bundle (`npm run build`).
+   - **Stage 2 (Runner)**: Uses a clean `node:18-alpine` environment containing only runtime dependencies to serve the distribution via `vite preview --host 0.0.0.0 --port 5173`, reducing final image size.
+2. **Backend Container ([`backend/Dockerfile`](backend/Dockerfile))**:
+   - Uses `node:18-alpine` base image.
+   - Leverages Docker layer caching by copying `package*.json` prior to `npm install`.
+   - Binds to port `5000`.
+3. **Build Context Optimization ([`.dockerignore`](.dockerignore))**:
+   - Dedicated `.dockerignore` files in root, `backend/`, and `Portfolio/` prevent host `node_modules`, `.env`, and compilation artifacts from polluting the container image context.
+4. **Data Persistence**:
+   - Named volume `mongo-data` mapped to `/data/db` prevents data loss when the MongoDB container is stopped or recreated.
+5. **Single-Command Orchestration**:
+   - Entire application lifecycle managed with `docker compose up --build` and `docker compose down`.
+
+#### Key Viva / Exam Concept Questions:
+| Question | Answer for Viva |
+| :--- | :--- |
+| **Why does the backend connect via `mongodb` instead of `localhost`?** | In Docker bridge networks, `localhost` (127.0.0.1) refers to each container's own isolated loopback network. Docker Compose creates an internal DNS network allowing services to communicate seamlessly using their service names (e.g. `mongodb://mongodb:27017/taskdb`). |
+| **What is the difference between `EXPOSE` and `ports`?** | `EXPOSE` is internal documentation declaring which ports the container listens on. `ports` in `docker-compose.yml` binds the container's internal port to a host machine port (e.g., `5000:5000`), making it accessible from the host browser. |
+| **Why should `node_modules` be excluded via `.dockerignore`?** | Host `node_modules` contains binary bindings compiled for the host OS (e.g., Windows x64). Copying them into a Linux container causes platform mismatch errors. Running `npm install` inside the container guarantees pure Linux-compiled dependencies. |
+| **Why use a multi-stage Docker build?** | Separating build tools from the runtime container drastically shrinks image size, speeds up deployments, and minimizes the container attack surface by excluding unnecessary source files and build devDependencies. |
 
 ---
 
