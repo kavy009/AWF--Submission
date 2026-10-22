@@ -1,0 +1,16 @@
+{
+  "name": "awf-fullstack-suite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ITUE301 Advanced Web Development Frameworks - Full-Stack CI/CD and Testing Suite",
+  "scripts": {
+    "test": "npm test --prefix backend",
+    "test:broken": "npm run test:broken --prefix backend",
+    "test:backend": "npm test --prefix backend",
+    "test:frontend": "npm run build --prefix Portfolio",
+    "build": "npm run build --prefix Portfolio",
+    "install:all": "npm install --prefix backend && npm install --prefix Portfolio"
+  },
+  "author": "Kavya Chauhan (24CE017)",
+  "license": "ISC"
+}

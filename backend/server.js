@@ -31,16 +31,18 @@ app.use((req, res, next) => {
 // 4. Connect to MongoDB via Mongoose
 let isDbConnected = false;
 
-mongoose
-  .connect(MONGO_URI)
-  .then(() => {
-    isDbConnected = true;
-    console.log(`[Database] MongoDB connected successfully to ${MONGO_URI}`);
-  })
-  .catch((err) => {
-    console.error(`[Database Warning] Could not connect to MongoDB: ${err.message}`);
-    console.log('[Database Info] Ensure MongoDB is running locally or provide a valid MONGO_URI in .env');
-  });
+if (process.env.NODE_ENV !== 'test') {
+  mongoose
+    .connect(MONGO_URI)
+    .then(() => {
+      isDbConnected = true;
+      console.log(`[Database] MongoDB connected successfully to ${MONGO_URI}`);
+    })
+    .catch((err) => {
+      console.error(`[Database Warning] Could not connect to MongoDB: ${err.message}`);
+      console.log('[Database Info] Ensure MongoDB is running locally or provide a valid MONGO_URI in .env');
+    });
+}
 
 // In-memory fallback tasks in case MongoDB is offline during testing
 let memoryTasks = [

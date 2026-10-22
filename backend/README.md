@@ -169,3 +169,30 @@ node test-docker.js
 # Build and launch complete multi-container stack (from project root)
 docker compose up --build
 ```
+
+---
+
+## 🎯 Practical 12: CI/CD Pipeline with GitHub Actions
+- **Objective:** To automate testing and deployment of the application using a cloud-native CI/CD pipeline.
+- **Course Outcomes / Program Outcomes:** CO5 / PO3, PO5
+
+### 🚀 CI Pipeline Architecture (`.github/workflows/ci.yml`)
+1. **Trigger:** Automated execution on every `push` and `pull_request` to `main`, plus manual UI trigger (`workflow_dispatch`).
+2. **Environment:** Ubuntu Linux runner (`ubuntu-latest`) with Node.js 20.
+3. **Jobs & Steps:**
+   - **Backend Test Job:** Checks out code, sets up Node.js 20, runs clean install `npm ci`, and executes the 6-part Jest integration test suite with Supertest.
+   - **Frontend Build Job:** Runs `npm ci` and compiles the optimized production Vite bundle.
+   - **Docker Validation Job:** Runs `docker compose config --quiet` to validate container orchestration.
+
+### 🧪 Running Automated Tests Locally
+```bash
+# Run all passing integration tests (Passing Pipeline demonstration)
+npm test
+
+# Run deliberate failure test (Failing Pipeline demonstration for rubric)
+npm run test:broken
+
+# Run comprehensive CI/CD verification suite
+node test-cicd.js
+```
+

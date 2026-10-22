@@ -8,11 +8,12 @@
 **Institute**: Faculty of Technology and Engineering (FTE)  
 **University**: Charotar University of Science and Technology (CHARUSAT)  
 **Academic Year**: 2026–2027 (ODD Semester)  
-**GitHub Repository**: [https://github.com/kavy009/AWF--Submission](https://github.com/kavy009/AWF--Submission)
+**GitHub Repository**: [https://github.com/kavy009/AWF--Submission](https://github.com/kavy009/AWF--Submission)  
+[![CI Pipeline](https://github.com/kavy009/AWF--Submission/actions/workflows/ci.yml/badge.svg)](https://github.com/kavy009/AWF--Submission/actions/workflows/ci.yml)
 
 ---
 
-## 📑 Comprehensive Practical Index (Practicals 1 to 11)
+## 📑 Comprehensive Practical Index (Practicals 1 to 12)
 
 All practical assignments for ITUE301 have been implemented, tested, and organized in this single repository.
 
@@ -29,6 +30,7 @@ All practical assignments for ITUE301 have been implemented, tested, and organiz
 | **Practical 9** | **In-Memory Caching & Query Optimization** | `node-cache`, Express | [`backend/utils/cache.js`](backend/utils/cache.js) | Server-side in-memory caching with automatic write-invalidation (`POST`, `PUT`, `DELETE`), `/cache-stats` telemetry, and 26.8% latency reduction. |
 | **Practical 10** | **Asynchronous Processing with Event-Driven Architecture** | Node.js `events` (EventEmitter), Express | [`backend/events.js`](backend/events.js) | Decoupled background processing using native EventEmitter. Emits non-blocking `task-created` & `task-deleted` events, error boundary listener, and live timestamp ordering verification. |
 | **Practical 11** | **Containerization with Docker & Docker Compose** | Docker, Docker Compose, Alpine Linux | [`docker-compose.yml`](docker-compose.yml) | Multi-container orchestration (React frontend + Node/Express backend + MongoDB) with bridge network, multi-stage frontend build, and persistent named volume. |
+| **Practical 12** | **CI/CD Pipeline with GitHub Actions** | GitHub Actions, Jest, Supertest | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Automated CI/CD pipeline triggered on push/PR to main, dependency caching with `npm ci`, 6 automated Jest tests, Vite production build validation, and deliberate failure/recovery demonstration. |
 
 ---
 
@@ -275,6 +277,78 @@ Network Topology:
 | **What is the difference between `EXPOSE` and `ports`?** | `EXPOSE` is internal documentation declaring which ports the container listens on. `ports` in `docker-compose.yml` binds the container's internal port to a host machine port (e.g., `5000:5000`), making it accessible from the host browser. |
 | **Why should `node_modules` be excluded via `.dockerignore`?** | Host `node_modules` contains binary bindings compiled for the host OS (e.g., Windows x64). Copying them into a Linux container causes platform mismatch errors. Running `npm install` inside the container guarantees pure Linux-compiled dependencies. |
 | **Why use a multi-stage Docker build?** | Separating build tools from the runtime container drastically shrinks image size, speeds up deployments, and minimizes the container attack surface by excluding unnecessary source files and build devDependencies. |
+
+---
+
+### Practical 12: CI/CD Pipeline with GitHub Actions
+**Objective**: Automate testing, dependency validation, and production bundling using a cloud-native Continuous Integration (CI) pipeline with GitHub Actions.
+
+#### CI/CD Pipeline Architecture
+```
+  Developer Action: git push origin main / Pull Request
+                     │
+                     ▼
+        ┌─────────────────────────┐
+        │ GitHub Actions Trigger  │
+        │      (on: push)         │
+        └────────────┬────────────┘
+                     │
+       ┌─────────────┴─────────────┐
+       ▼                           ▼
+┌──────────────┐            ┌──────────────┐
+│ backend-test │            │frontend-build│
+├──────────────┤            ├──────────────┤
+│ 1. Checkout  │            │ 1. Checkout  │
+│ 2. Node 20   │            │ 2. Node 20   │
+│ 3. npm ci    │            │ 3. npm ci    │
+│ 4. npm test  │            │ 4. npm build │
+│  (Jest 6/6)  │            │ (Vite chunk) │
+└──────┬───────┘            └──────┬───────┘
+       │                           │
+       └─────────────┬─────────────┘
+                     ▼
+          ┌────────────────────┐
+          │   docker-validate  │
+          │ docker comp config │
+          └──────────┬─────────┘
+                     │
+                     ▼
+        Status: Green Checkmark (Pass) / Red X (Fail)
+```
+
+#### Key Implementation Details:
+1. **Pipeline Configuration ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))**:
+   - Triggers on `push` and `pull_request` targeting the `main` branch, with optional manual dispatch (`workflow_dispatch`).
+   - Jobs:
+     - `backend-test`: Sets up Node.js 20, runs `npm ci` with lockfile caching, and executes the 6-part Jest integration test suite.
+     - `frontend-build`: Installs frontend dependencies with `npm ci` and builds the production bundle via Vite.
+     - `docker-validate`: Runs `docker compose config --quiet` to verify multi-container orchestration integrity.
+2. **Automated Test Suite ([`backend/tests/api.test.js`](backend/tests/api.test.js))**:
+   - Tests `/cache-stats` telemetry and health metrics.
+   - Tests route protection and rejection of unauthenticated requests (`401 Unauthorized`).
+   - Tests Content-Type enforcement and input validation pipelines (`400 Bad Request`).
+   - Tests asynchronous event listener telemetry logs (`/events/logs`).
+   - Includes a deterministic fail/pass assertion for pipeline evaluation.
+3. **Demonstrating Failed vs. Fixed Pipeline (Practical 12 Rubric)**:
+   - **Normal Mode (Passing Pipeline)**:
+     ```bash
+     npm test
+     ```
+     Result: All 6 tests pass; pipeline completes with green checkmark.
+   - **Deliberate Failure Mode (Failing Pipeline Demonstration)**:
+     ```bash
+     npm run test:broken
+     ```
+     Result: Tests trigger simulated assertion error (`Expected: 999, Received: 200`), causing exit code `1` and a red X in GitHub Actions logs.
+   - **Manual UI Simulation**: The workflow supports manual dispatch with `simulate_failure: true` from the GitHub Actions web interface.
+
+#### Key Viva / Exam Concept Questions:
+| Question | Answer for Viva |
+| :--- | :--- |
+| **What is the difference between CI and CD?** | **Continuous Integration (CI)** automates code compilation, linting, and test execution whenever code is pushed to detect bugs early. **Continuous Deployment/Delivery (CD)** automates the release and deployment of passing builds to staging/production servers. |
+| **Why is `npm ci` preferred over `npm install` in CI pipelines?** | `npm ci` (Clean Install) strictly installs dependencies from `package-lock.json` without modifying it, deletes existing `node_modules` for clean repeatability, and runs significantly faster than `npm install`. |
+| **Why run automated tests on every push instead of manually before release?** | Automated CI testing provides immediate feedback at the commit level. Catching regressions within minutes of writing code reduces debugging costs exponentially compared to discovering bugs during manual pre-release QA. |
+| **What happens if a test file path or syntax error exists?** | The CI runner fails during the `npm test` step with an execution/syntax error code (`exit code 1`), preventing broken code from advancing or merging into the main branch. |
 
 ---
 
